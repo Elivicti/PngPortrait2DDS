@@ -14,15 +14,48 @@ public:
 	bool setPreviewPng(const QString& filepath);
 
 	double getScaleRatio() const { return scaleRatio; }
+	QPoint getImageOffset() const { return pngOffset; }
+
+	void setImageOffset(const QPoint& offset) { pngOffset = offset; }
+	void setImageOffset(int x, int y)
+	{
+		pngOffset.setX(x);
+		pngOffset.setY(y);
+	}
+
+	bool isCursorMovingImage() const { return movingImage; }
+
+signals:
+	void imageOffsetChangedByCursor(const QPoint& p);
+	void imageScaleChangedByWheel(double ratio);
 
 public slots:
 	void scalePng(double ratio);
 
 protected:
-	virtual void paintEvent(QPaintEvent* evt) override;
+	virtual void paintEvent(QPaintEvent*)			override;
+
+	virtual void mousePressEvent(QMouseEvent*)		override;
+	virtual void mouseMoveEvent(QMouseEvent*)		override;
+	virtual void mouseReleaseEvent(QMouseEvent*)	override;
+
+	virtual void wheelEvent(QWheelEvent*)			override;
+
+private:
+	inline void scalePng() {
+		scaledPng = png.scaled(
+			png.size() * scaleRatio,
+			Qt::AspectRatioMode::KeepAspectRatio,
+			Qt::TransformationMode::SmoothTransformation
+		);
+	}
 
 private:
 	double scaleRatio;
 	QPixmap png;
 	QPixmap scaledPng;
+	QPoint pngOffset;
+	QPoint cursorOffset;
+
+	bool movingImage;
 };

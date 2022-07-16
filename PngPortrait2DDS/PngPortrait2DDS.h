@@ -8,6 +8,7 @@ namespace Ui { class PngPortrait2DDSClass; };
 QT_END_NAMESPACE
 
 #include <QFileInfo>
+#include <QProcess>
 
 class PngPortrait2DDS : public QMainWindow
 {
@@ -17,11 +18,24 @@ public:
     PngPortrait2DDS(QWidget* parent = nullptr);
     ~PngPortrait2DDS();
 
+public slots:
+    void show();
+
 private slots:
-    void onBrowsDirectoryClicked();
+    void onBrowseDirectoryClicked();
+
+    void onImageSizeChanged(int value);
+    void onImageOffsetChanged(int value);
+
+    void onExport();
+
+protected:
+    virtual void resizeEvent(QResizeEvent* evt) override;
 
 private:
     Ui::PngPortrait2DDSClass* ui;
 
     QFileInfoList pngSources;
+
+    QProcess* nvdxt;
 };

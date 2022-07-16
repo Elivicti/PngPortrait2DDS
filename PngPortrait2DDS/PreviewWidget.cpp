@@ -1,12 +1,14 @@
 #include "PreviewWidget.h"
 
+#include <QPaintEvent>
 #include <QPainter>
 
 #include <qdebug.h>
 
 PreviewWidget::PreviewWidget(QWidget *parent)
 	: QWidget(parent)
-	, scaleRatio(1.0)
+	, scaleRatio(1.0), pngOffset(0, 0)
+	, movingImage(false)
 {
 }
 
@@ -22,7 +24,49 @@ void PreviewWidget::paintEvent(QPaintEvent* evt)
 
 	if (!png.isNull())
 	{
-		painter.drawPixmap(0, 0, scaledPng);
+		painter.drawPixmap(pngOffset.x(), pngOffset.y(), scaledPng);
+	}
+
+	// Frame
+	painter.setPen(QColor(0, 0, 0));
+	painter.drawRect(0, 0, this->width(), this->height());
+}
+
+
+void PreviewWidget::mousePressEvent(QMouseEvent* evt) {
+	movingImage = (evt->button() == Qt::MouseButton::LeftButton) && !png.isNull();
+	if (movingImage)
+	{
+		cursorOffset = pngOffset - evt->pos();
+	}
+}
+void PreviewWidget::mouseMoveEvent(QMouseEvent* evt) {
+	if (movingImage)
+	{
+		pngOffset = evt->pos() + cursorOffset;
+		this->repaint();
+
+		emit imageOffsetChangedByCursor(pngOffset);
+	}
+}
+void PreviewWidget::mouseReleaseEvent(QMouseEvent* evt)
+{
+	movingImage = false;
+}
+
+void PreviewWidget::wheelEvent(QWheelEvent* evt)
+{
+	if (!png.isNull())
+	{
+		if (evt->angleDelta().y() > 0 && scaleRatio < 2.0 - 1e-6)
+			scaleRatio += 0.01;
+		else if (evt->angleDelta().y() < 0 && scaleRatio > 0.0)
+			scaleRatio -= 0.01;
+
+		scalePng();
+		this->repaint();
+		
+		emit imageScaleChangedByWheel(scaleRatio);
 	}
 }
 
@@ -30,9 +74,8 @@ bool PreviewWidget::setPreviewPng(const QString& filepath)
 {
 	if (png.load(filepath))
 	{
-		scaledPng = png.scaled(png.size() * scaleRatio, Qt::AspectRatioMode::KeepAspectRatio, Qt::TransformationMode::SmoothTransformation);
+		scalePng();
 		this->repaint();
-
 		return true;
 	}
 	else
@@ -45,10 +88,6 @@ void PreviewWidget::scalePng(double ratio)
 	scaleRatio = ratio;
 	if (!png.isNull())
 	{
-		scaledPng = png.scaled(
-			png.size() * scaleRatio,
-			Qt::AspectRatioMode::KeepAspectRatio,
-			Qt::TransformationMode::SmoothTransformation
-		);
+		scalePng();
 	}
 }
