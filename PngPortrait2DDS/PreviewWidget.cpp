@@ -7,7 +7,7 @@
 
 PreviewWidget::PreviewWidget(QWidget *parent)
 	: QWidget(parent)
-	, scaleRatio(1.0), pngOffset(0, 0)
+	, scaleRatio(1.0), widgetScale(1.0), pngOffset(0, 0)
 	, movingImage(false)
 {
 }
@@ -24,7 +24,7 @@ void PreviewWidget::paintEvent(QPaintEvent* evt)
 
 	if (!png.isNull())
 	{
-		painter.drawPixmap(pngOffset.x(), pngOffset.y(), scaledPng);
+		painter.drawPixmap(pngOffset.x() * widgetScale, pngOffset.y() * widgetScale, scaledPng);
 	}
 
 	// Frame
@@ -80,6 +80,16 @@ bool PreviewWidget::setPreviewPng(const QString& filepath)
 	}
 	else
 		return false;
+}
+
+void PreviewWidget::scaledResize(int w, int h, const QSize& imgSize)
+{
+	widgetScale = (double)h / (double)imgSize.height();
+
+	if (!scaledPng.isNull())
+		scalePng();
+
+	QWidget::resize(w, h);
 }
 
 // public slots

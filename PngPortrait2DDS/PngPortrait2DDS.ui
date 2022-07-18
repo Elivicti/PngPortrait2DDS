@@ -6,21 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>613</width>
-    <height>693</height>
+    <width>616</width>
+    <height>686</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>PngPortrait2DDS</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1,1,0">
-    <property name="spacing">
-     <number>8</number>
-    </property>
-    <property name="leftMargin">
-     <number>9</number>
-    </property>
+   <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1,1,0">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
       <property name="spacing">
@@ -70,27 +64,42 @@
      </layout>
     </item>
     <item>
-     <widget class="QListView" name="lvPngItems">
+     <widget class="PortraitTableView" name="tbvPngItems">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
       <property name="frameShadow">
        <enum>QFrame::Plain</enum>
       </property>
+      <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOn</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
       <property name="editTriggers">
        <set>QAbstractItemView::NoEditTriggers</set>
       </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+      <property name="selectionBehavior">
+       <enum>QAbstractItemView::SelectRows</enum>
+      </property>
+      <property name="verticalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
      </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,1">
       <item>
-       <widget class="QFrame" name="fmPreview">
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Plain</enum>
+       <widget class="QGroupBox" name="fmPreview">
+        <property name="title">
+         <string>Preview</string>
         </property>
         <widget class="PreviewWidget" name="wPreview" native="true">
          <property name="geometry">
@@ -105,165 +114,167 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="gbImageSettings">
-        <property name="title">
-         <string/>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <item>
-          <widget class="QGroupBox" name="gbImageSize">
-           <property name="title">
-            <string>Image Size</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_6">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="lbImageWidth">
-                <property name="text">
-                 <string>Width</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spbImageWidth">
-                <property name="maximum">
-                 <number>1024</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_5">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="lbImageHeight">
-                <property name="text">
-                 <string>Height</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spbImageHeight">
-                <property name="maximum">
-                 <number>1024</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="gbPortraitOffset">
-           <property name="title">
-            <string>Portrait Offset</string>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_3">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="lbPotraitOffsetX">
-                <property name="text">
-                 <string>X</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spbPortraitOffsetX">
-                <property name="minimum">
-                 <number>-999</number>
-                </property>
-                <property name="maximum">
-                 <number>999</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <item>
-               <widget class="QLabel" name="lbPortraitOffsetY">
-                <property name="text">
-                 <string>Y</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QSpinBox" name="spbPortraitOffsetY">
-                <property name="minimum">
-                 <number>-999</number>
-                </property>
-                <property name="maximum">
-                 <number>999</number>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QGroupBox" name="gbPotraitScale">
-           <property name="title">
-            <string>Portrait Scale</string>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout">
-            <item>
-             <widget class="QDoubleSpinBox" name="dspbPotraitScale">
-              <property name="decimals">
-               <number>3</number>
-              </property>
-              <property name="maximum">
-               <double>2.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.001000000000000</double>
-              </property>
-              <property name="value">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSlider" name="hsldPotraitScale">
-              <property name="maximum">
-               <number>200</number>
-              </property>
-              <property name="value">
-               <number>100</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="tickPosition">
-               <enum>QSlider::NoTicks</enum>
-              </property>
-              <property name="tickInterval">
-               <number>0</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QGroupBox" name="gbImageSize">
+          <property name="title">
+           <string>Image Size</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbImageWidth">
+               <property name="text">
+                <string>Width</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="spbImageWidth">
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbImageHeight">
+               <property name="text">
+                <string>Height</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="spbImageHeight">
+               <property name="maximum">
+                <number>1024</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="checkBox_4">
+          <property name="text">
+           <string>Use Seperate Settings</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="gbPortraitOffset">
+          <property name="title">
+           <string>Portrait Offset</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbPotraitOffsetX">
+               <property name="text">
+                <string>X</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="spbPortraitOffsetX">
+               <property name="minimum">
+                <number>-999</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item>
+              <widget class="QLabel" name="lbPortraitOffsetY">
+               <property name="text">
+                <string>Y</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="spbPortraitOffsetY">
+               <property name="minimum">
+                <number>-999</number>
+               </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="gbPotraitScale">
+          <property name="title">
+           <string>Portrait Scale</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QDoubleSpinBox" name="dspbPotraitScale">
+             <property name="decimals">
+              <number>3</number>
+             </property>
+             <property name="maximum">
+              <double>2.000000000000000</double>
+             </property>
+             <property name="singleStep">
+              <double>0.001000000000000</double>
+             </property>
+             <property name="value">
+              <double>1.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSlider" name="hsldPotraitScale">
+             <property name="maximum">
+              <number>2000</number>
+             </property>
+             <property name="value">
+              <number>1000</number>
+             </property>
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="tickPosition">
+              <enum>QSlider::NoTicks</enum>
+             </property>
+             <property name="tickInterval">
+              <number>0</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
@@ -318,12 +329,16 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>613</width>
+     <width>616</width>
      <height>22</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -332,6 +347,11 @@
    <extends>QWidget</extends>
    <header>PreviewWidget.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>PortraitTableView</class>
+   <extends>QTableView</extends>
+   <header>PortraitTableView.h</header>
   </customwidget>
  </customwidgets>
  <resources>

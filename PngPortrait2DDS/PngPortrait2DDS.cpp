@@ -1,44 +1,48 @@
 #include "PngPortrait2DDS.h"
+
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QStringListModel>
+#include <QStandardItemModel>
 #include <QDir>
 #include <QPainter>
 
 #include <QDebug>
 
+#define ScaleSliderMaxValue 1000
 
 PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	: QMainWindow(parent)
-	, ui(new Ui::PngPortrait2DDSClass())
+	, ui(new Ui::PngPortrait2DDSClass()), lbLog(new QLabel(this))
 	, nvdxt(new QProcess(this))
 {
 	ui->setupUi(this);
+	ui->statusBar->addPermanentWidget(lbLog);
+
 	ui->wPreview->scalePng(0.22);
 	connect(ui->btnBrowseDirectory, &QPushButton::clicked, this, &PngPortrait2DDS::onBrowseDirectoryClicked);
-	connect(ui->lvPngItems, &QAbstractItemView::activated, [this](const QModelIndex& index) {
+	connect(ui->tbvPngItems, &QAbstractItemView::activated, [this](const QModelIndex& index) {
 		if (index.isValid())
 		{
 			ui->wPreview->setPreviewPng(pngSources[index.row()].absoluteFilePath());
 			ui->dspbPotraitScale->setValue(ui->wPreview->getScaleRatio());
-			ui->hsldPotraitScale->setValue(ui->wPreview->getScaleRatio() * 100);
+			ui->hsldPotraitScale->setValue(ui->wPreview->getScaleRatio() * ScaleSliderMaxValue);
 		}
 	});
 
 	connect(ui->dspbPotraitScale, &QDoubleSpinBox::valueChanged, [this](double value) {
-		ui->hsldPotraitScale->setValue(value * 100);
+		ui->hsldPotraitScale->setValue(value * 1000);
 		ui->wPreview->scalePng(value);
 		ui->wPreview->repaint();
 	});
 	connect(ui->hsldPotraitScale, &QSlider::sliderMoved, [this](int value) {
-		ui->dspbPotraitScale->setValue((double)value / 100.0);
-		ui->wPreview->scalePng((double)value / 100.0);
+		ui->dspbPotraitScale->setValue((double)value / (double)ScaleSliderMaxValue);
+		ui->wPreview->scalePng((double)value / (double)ScaleSliderMaxValue);
 		ui->wPreview->repaint();
 	});
 
 	connect(ui->wPreview, &PreviewWidget::imageScaleChangedByWheel, [this](double ratio) {
 		ui->dspbPotraitScale->setValue(ratio);
-		ui->hsldPotraitScale->setValue(ratio * 100);
+		ui->hsldPotraitScale->setValue(ratio * ScaleSliderMaxValue);
 	});
 
 	QSize size = ui->wPreview->size();
@@ -79,12 +83,10 @@ void PngPortrait2DDS::onBrowseDirectoryClicked()
 	{
 		ui->lePngDirectory->setText(dir);
 		pngSources = QDir(dir).entryInfoList(QStringList(QString("*.png")));
+		ui->tbvPngItems->setPortraitsInfo(&pngSources);
 
-		QStringList fileNames;
-		for (auto& png : pngSources)
-			fileNames.append(png.fileName());
-		QStringListModel* model = new QStringListModel(fileNames, this);
-		ui->lvPngItems->setModel(model);
+		ui->statusBar->showMessage(tr("Load Completed: %1 Total").arg(pngSources.size()));
+		
 	}
 }
 
@@ -93,18 +95,28 @@ void PngPortrait2DDS::onImageSizeChanged(int value)
 	int height = ui->spbImageHeight->value();
 	int width = ui->spbImageWidth->value();
 	QSize frameSize = ui->fmPreview->size();
+	QSize imgSize(width, height);
+	int margin = 30;
 
-	if (height < frameSize.height() && width < frameSize.width())
+	if (height >= frameSize.height() - margin || width >= frameSize.width() - margin)
 	{
-		ui->wPreview->resize(width, height);
-		ui->wPreview->move((frameSize.width() - width) / 2, (frameSize.height() - height) / 2);
-	}
-	else
-	{
-		int margin = 10;
-		QSize previewSize = ui->wPreview->size();
 
+		double ratio = (double)height / (double)width;
+		// make sure scaled height(new height) is smaller than frame height
+		if (height >= width || (frameSize.width() - margin) * ratio >= frameSize.height() - margin)
+		{
+			height = frameSize.height() - margin;
+			width = height / ratio;
+		}
+		else
+		{
+			width = frameSize.width() - margin;
+			height = width * ratio;
+		}
 	}
+
+	ui->wPreview->move((frameSize.width() - width) / 2, (frameSize.height() - height) / 2);
+	ui->wPreview->scaledResize(width, height, imgSize);
 
 	ui->fmPreview->repaint();
 }
@@ -127,7 +139,7 @@ void PngPortrait2DDS::onExport()
 	img.fill(QColor(0, 0, 0, 0));
 
 	// load portrait
-	QPixmap portrait(pngSources[ui->lvPngItems->currentIndex().row()].absoluteFilePath());
+	QPixmap portrait(pngSources[ui->tbvPngItems->currentIndex().row()].absoluteFilePath());
 	
 	// read preset
 	QPoint offset = ui->wPreview->getImageOffset();

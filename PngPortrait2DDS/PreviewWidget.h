@@ -24,6 +24,8 @@ public:
 	}
 
 	bool isCursorMovingImage() const { return movingImage; }
+	
+	void scaledResize(int w, int h,const QSize& imgSize);
 
 signals:
 	void imageOffsetChangedByCursor(const QPoint& p);
@@ -44,7 +46,7 @@ protected:
 private:
 	inline void scalePng() {
 		scaledPng = png.scaled(
-			png.size() * scaleRatio,
+			png.size() * scaleRatio * widgetScale,
 			Qt::AspectRatioMode::KeepAspectRatio,
 			Qt::TransformationMode::SmoothTransformation
 		);
@@ -52,6 +54,8 @@ private:
 
 private:
 	double scaleRatio;
+	double widgetScale;
+
 	QPixmap png;
 	QPixmap scaledPng;
 	QPoint pngOffset;

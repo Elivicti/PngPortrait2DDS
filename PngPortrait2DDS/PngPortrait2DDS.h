@@ -34,6 +34,7 @@ protected:
 
 private:
     Ui::PngPortrait2DDSClass* ui;
+    QLabel* lbLog;
 
     QFileInfoList pngSources;
 

@@ -85,6 +85,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GlobalPortrait2DDSData.cpp" />
+    <ClCompile Include="PortraitTableView.cpp" />
     <ClCompile Include="PreviewWidget.cpp" />
     <QtRcc Include="PngPortrait2DDS.qrc" />
     <QtUic Include="PngPortrait2DDS.ui" />
@@ -96,6 +98,12 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PreviewWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PortraitTableView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GlobalPortrait2DDSData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
