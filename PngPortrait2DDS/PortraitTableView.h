@@ -15,7 +15,7 @@ public:
 
 	QStandardItemModel* getModel() { return itemModel; }
 
-	void setPortraitsInfo(QFileInfoList* portraits);
+	void setPortraitsInfo(const QStringList& portraits);
 
 
 protected:

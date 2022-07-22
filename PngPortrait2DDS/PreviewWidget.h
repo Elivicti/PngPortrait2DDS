@@ -16,6 +16,8 @@ public:
 	double getScaleRatio() const { return scaleRatio; }
 	QPoint getImageOffset() const { return pngOffset; }
 
+	void setImageOffsetX(int x) { pngOffset.setX(x); }
+	void setImageOffsetY(int y) { pngOffset.setY(y); }
 	void setImageOffset(const QPoint& offset) { pngOffset = offset; }
 	void setImageOffset(int x, int y)
 	{

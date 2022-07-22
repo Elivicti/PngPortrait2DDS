@@ -44,14 +44,14 @@ void PortraitTableView::resizeHeaders()
 	header->resizeSection(3, 54);
 }
 
-void PortraitTableView::setPortraitsInfo(QFileInfoList* portraits)
+void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
 {
 	itemModel->clear();
 
-	int maxRow = portraits->size();
+	int maxRow = portraits.size();
 	for (int row = 0; row < maxRow; row++)
 	{
-		QStandardItem* filename = new QStandardItem(portraits->at(row).fileName());
+		QStandardItem* filename = new QStandardItem(portraits.at(row));
 		itemModel->appendRow({ filename, new QStandardItem(), new QStandardItem(), new QStandardItem()});
 		for (int i = 1; i < 4; i++)
 		{

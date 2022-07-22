@@ -52,7 +52,7 @@
     <ClCompile Include="PortraitTableView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalPortrait2DDSData.cpp">
+    <ClCompile Include="PortraitDataList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -65,7 +65,7 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GlobalPortrait2DDSData.h">
+    <ClInclude Include="PortraitDataList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
