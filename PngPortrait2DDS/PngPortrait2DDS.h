@@ -33,6 +33,8 @@ private slots:
 	void onImageOffsetXChanged(int value);
 	void onImageOffsetYChanged(int value);
 
+
+	void onExportOptionChanged(int state);
 	void onExport();
 
 protected:

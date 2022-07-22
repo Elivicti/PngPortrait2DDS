@@ -26,6 +26,8 @@ public:
 	inline void append(PortraitData* portrait) { data.append(portrait); }
 	inline PortraitData* at(qsizetype i) { return data.at(i + 1); }
 
+	inline qsizetype size() const { return data.size() - 1; }
+
 	void clear();
 public:
 #define GetIndex(i) ((i + 1) * data.at(i + 1)->useSeperateSetting)
@@ -46,8 +48,7 @@ public:
 	inline void setDefaultOffset(const QPoint& offset) { data.at(0)->offset = offset; }
 	inline void setDefaultOffset(int x, int y) { data.at(0)->offset = { x, y }; }
 	inline void setDefaultScale(double scale) { data.at(0)->scale = scale; }
-
-public:
+private:
 	QList<PortraitData*> data;
 };
 

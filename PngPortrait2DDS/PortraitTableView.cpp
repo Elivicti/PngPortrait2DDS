@@ -47,10 +47,14 @@ void PortraitTableView::resizeHeaders()
 void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
 {
 	itemModel->clear();
+	for (auto& row : cbUsingTypes)
+		row.clear();
+	cbUsingTypes.clear();
 
 	int maxRow = portraits.size();
 	for (int row = 0; row < maxRow; row++)
 	{
+		cbUsingTypes.append(QList<QCheckBox*>());
 		QStandardItem* filename = new QStandardItem(portraits.at(row));
 		itemModel->appendRow({ filename, new QStandardItem(), new QStandardItem(), new QStandardItem()});
 		for (int i = 1; i < 4; i++)
@@ -58,6 +62,9 @@ void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
 			QWidget* widget = new QWidget(this);
 			QGridLayout* layout = new QGridLayout(widget);
 			QCheckBox* box = new QCheckBox(widget);
+			cbUsingTypes[row].append(box);
+
+			box->setObjectName(QString::fromUtf8("cbIsUsingThisType"));
 			box->setChecked(true);
 			layout->addWidget(box);
 			layout->setAlignment(Qt::AlignCenter);
@@ -68,4 +75,9 @@ void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
 
 	setHeaders();
 	this->viewport()->update();
+}
+
+bool PortraitTableView::isUsingPortraitType(int row, PortraitUsingType t)
+{
+	return cbUsingTypes[row][(int)t]->isChecked();
 }

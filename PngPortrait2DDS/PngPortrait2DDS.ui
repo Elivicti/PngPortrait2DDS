@@ -106,8 +106,8 @@
           <rect>
            <x>40</x>
            <y>40</y>
-           <width>270</width>
-           <height>150</height>
+           <width>280</width>
+           <height>160</height>
           </rect>
          </property>
         </widget>
@@ -138,6 +138,9 @@
                <property name="maximum">
                 <number>1024</number>
                </property>
+               <property name="singleStep">
+                <number>4</number>
+               </property>
               </widget>
              </item>
             </layout>
@@ -158,6 +161,9 @@
               <widget class="QSpinBox" name="spbImageHeight">
                <property name="maximum">
                 <number>1024</number>
+               </property>
+               <property name="singleStep">
+                <number>4</number>
                </property>
               </widget>
              </item>
@@ -287,7 +293,7 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QCheckBox" name="checkBox_3">
+          <widget class="QCheckBox" name="cbExportDDS">
            <property name="text">
             <string>DDS</string>
            </property>
@@ -297,16 +303,19 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="checkBox">
+          <widget class="QCheckBox" name="cbExportRegistration">
            <property name="text">
             <string>Portrait Registration</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="checkBox_2">
+          <widget class="QCheckBox" name="cbExportProperNameEffect">
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determines if the program will generate an effect file and a yml file which will allow you to link portrait to its proper name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
-            <string>DDS</string>
+            <string>Proper Name Effect</string>
            </property>
           </widget>
          </item>
@@ -333,6 +342,12 @@
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+   </widget>
+   <addaction name="menuOptions"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">
    <property name="sizeGripEnabled">
