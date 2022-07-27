@@ -32,12 +32,12 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>msvc_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;concurrent</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>msvc_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;concurrent</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -86,7 +86,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PortraitDataList.cpp" />
-    <ClCompile Include="PortraitTableView.cpp" />
+    <ClCompile Include="PortraitTable.cpp" />
     <ClCompile Include="PreviewWidget.cpp" />
     <QtRcc Include="PngPortrait2DDS.qrc" />
     <QtUic Include="PngPortrait2DDS.ui" />
@@ -100,7 +100,7 @@
     <QtMoc Include="PreviewWidget.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="PortraitTableView.h" />
+    <QtMoc Include="PortraitTable.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PortraitDataList.h" />

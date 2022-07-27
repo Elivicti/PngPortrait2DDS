@@ -1,41 +1,41 @@
-#include "PortraitTableView.h"
+#include "PortraitTable.h"
 #include <QStandardItemModel>
 
 #include <QHeaderView>
 #include <QLayout>
 #include <QCheckBox>
 
+#include <QProgressDialog>
+#include <QtConcurrent>
 
 
-
-PortraitTableView::PortraitTableView(QWidget *parent)
-	: QTableView(parent)
-	, itemModel(new QStandardItemModel(this))
+PortraitTable::PortraitTable(QWidget *parent)
+	: QTableWidget(parent)
 {
-	this->setModel(itemModel);
-
 	setHeaders();
 
-	
 	this->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
 	this->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
+
+	
 }
 
-PortraitTableView::~PortraitTableView()
+PortraitTable::~PortraitTable()
 {}
 
-void PortraitTableView::resizeEvent(QResizeEvent* evt)
+void PortraitTable::resizeEvent(QResizeEvent* evt)
 {
 	resizeHeaders();
 }
 
-void PortraitTableView::setHeaders()
+void PortraitTable::setHeaders()
 {
+	this->setColumnCount(4);
 	QStringList headers({ tr("Portrait"), tr("Species"), tr("leader"), tr("Ruler") });
-	itemModel->setHorizontalHeaderLabels(headers);
+	this->setHorizontalHeaderLabels(headers);
 }
 
-void PortraitTableView::resizeHeaders()
+void PortraitTable::resizeHeaders()
 {
 	QHeaderView* header = this->horizontalHeader();
 	header->resizeSection(0, this->size().width() - 3 * 54 - 18);
@@ -44,19 +44,23 @@ void PortraitTableView::resizeHeaders()
 	header->resizeSection(3, 54);
 }
 
-void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
+void PortraitTable::setPortraitsInfo(const QStringList& portraits)
 {
-	itemModel->clear();
+	int maxRow = portraits.size();
+
+	this->clear();
 	for (auto& row : cbUsingTypes)
 		row.clear();
 	cbUsingTypes.clear();
 
-	int maxRow = portraits.size();
+	this->setRowCount(maxRow);
+
 	for (int row = 0; row < maxRow; row++)
 	{
+
 		cbUsingTypes.append(QList<QCheckBox*>());
-		QStandardItem* filename = new QStandardItem(portraits.at(row));
-		itemModel->appendRow({ filename, new QStandardItem(), new QStandardItem(), new QStandardItem()});
+
+		this->setItem(row, 0, new QTableWidgetItem(portraits.at(row)));
 		for (int i = 1; i < 4; i++)
 		{
 			QWidget* widget = new QWidget(this);
@@ -69,15 +73,18 @@ void PortraitTableView::setPortraitsInfo(const QStringList& portraits)
 			layout->addWidget(box);
 			layout->setAlignment(Qt::AlignCenter);
 			widget->setLayout(layout);
-			this->setIndexWidget(itemModel->index(row, i), widget);
+			this->setCellWidget(row, i, widget);
 		}
 	}
+	
 
 	setHeaders();
 	this->viewport()->update();
+	emit tableLoadingCompleted();
+
 }
 
-bool PortraitTableView::isUsingPortraitType(int row, PortraitUsingType t)
+bool PortraitTable::isUsingPortraitType(int row, PortraitUsingType t)
 {
 	return cbUsingTypes[row][(int)t]->isChecked();
 }

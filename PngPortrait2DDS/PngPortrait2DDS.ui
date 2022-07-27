@@ -64,7 +64,7 @@
      </layout>
     </item>
     <item>
-     <widget class="PortraitTableView" name="tbvPngItems">
+     <widget class="PortraitTable" name="tbwPngItems">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -89,6 +89,9 @@
       <property name="verticalScrollMode">
        <enum>QAbstractItemView::ScrollPerPixel</enum>
       </property>
+      <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+       <bool>false</bool>
+      </attribute>
       <attribute name="verticalHeaderVisible">
        <bool>false</bool>
       </attribute>
@@ -346,6 +349,8 @@
     <property name="title">
      <string>Options</string>
     </property>
+    <addaction name="actionLoadPreset"/>
+    <addaction name="actionSavePreset"/>
    </widget>
    <addaction name="menuOptions"/>
   </widget>
@@ -354,6 +359,16 @@
     <bool>false</bool>
    </property>
   </widget>
+  <action name="actionLoadPreset">
+   <property name="text">
+    <string>Load Preset</string>
+   </property>
+  </action>
+  <action name="actionSavePreset">
+   <property name="text">
+    <string>Save Preset</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -364,9 +379,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>PortraitTableView</class>
-   <extends>QTableView</extends>
-   <header>PortraitTableView.h</header>
+   <class>PortraitTable</class>
+   <extends>QTableWidget</extends>
+   <header>PortraitTable.h</header>
   </customwidget>
  </customwidgets>
  <resources>

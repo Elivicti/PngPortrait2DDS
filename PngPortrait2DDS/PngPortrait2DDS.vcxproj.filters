@@ -49,7 +49,7 @@
     <ClCompile Include="PreviewWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PortraitTableView.cpp">
+    <ClCompile Include="PortraitTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PortraitDataList.cpp">
@@ -60,7 +60,7 @@
     <QtMoc Include="PreviewWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="PortraitTableView.h">
+    <QtMoc Include="PortraitTable.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

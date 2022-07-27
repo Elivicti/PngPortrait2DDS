@@ -25,6 +25,7 @@ public slots:
 
 private slots:
 	void onBrowseDirectoryClicked();
+	void onTableLoadingCompleted();
 
 	void onPortraitSelected(const QModelIndex& index);
 	void onUseSeperateSettingStateChanged(int state);
@@ -52,5 +53,5 @@ private:
 	PortraitDataList data;
 	int currIndex;
 
-	QProcess* nvdxt;
+	
 };
