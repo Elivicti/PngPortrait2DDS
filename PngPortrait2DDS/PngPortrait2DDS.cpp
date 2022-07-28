@@ -78,7 +78,8 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	connect(ui->actionSavePreset, &QAction::triggered, this, &PngPortrait2DDS::savePresetAsJson);
 	connect(ui->actionLoadPreset, &QAction::triggered, [this]() {
 		QString filename(QFileDialog::getOpenFileName(this, tr("Select Preset"), "./", tr("Json File(*.json)")));
-		this->loadPresetFromJson(filename);
+		if (!filename.isEmpty())
+			this->loadPresetFromJson(filename);
 	});
 
 	this->setAcceptDrops(true);
