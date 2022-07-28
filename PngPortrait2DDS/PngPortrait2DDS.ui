@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>PngPortrait2DDS</string>
+   <string notr="true">PngPortrait2DDS</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0,1,1,0">
@@ -199,7 +199,7 @@
              <item>
               <widget class="QLabel" name="lbPotraitOffsetX">
                <property name="text">
-                <string>X</string>
+                <string notr="true">X</string>
                </property>
               </widget>
              </item>
@@ -223,7 +223,7 @@
              <item>
               <widget class="QLabel" name="lbPortraitOffsetY">
                <property name="text">
-                <string>Y</string>
+                <string notr="true">Y</string>
                </property>
               </widget>
              </item>
@@ -301,7 +301,7 @@
          <item>
           <widget class="QCheckBox" name="cbExportDDS">
            <property name="text">
-            <string>DDS</string>
+            <string notr="true">DDS</string>
            </property>
            <property name="checked">
             <bool>true</bool>

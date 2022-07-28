@@ -69,4 +69,17 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="zh_cn.ts">
+      <Filter>Translation Files</Filter>
+    </QtTranslation>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="nvdxt.exe">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="zh_cn.qm">
+      <Filter>Translation Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="PngPortrait2DDS">
+    <qresource prefix="/Translation">
+        <file>zh_cn.qm</file>
     </qresource>
 </RCC>

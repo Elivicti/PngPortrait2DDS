@@ -88,11 +88,13 @@
     <ClCompile Include="PortraitDataList.cpp" />
     <ClCompile Include="PortraitTable.cpp" />
     <ClCompile Include="PreviewWidget.cpp" />
+    <None Include="zh_cn.qm" />
     <QtRcc Include="PngPortrait2DDS.qrc" />
     <QtUic Include="PngPortrait2DDS.ui" />
     <QtMoc Include="PngPortrait2DDS.h" />
     <ClCompile Include="PngPortrait2DDS.cpp" />
     <ClCompile Include="main.cpp" />
+    <None Include="nvdxt.exe" />
     <None Include="PngPortrait2DDS.ico" />
     <ResourceCompile Include="PngPortrait2DDS.rc" />
   </ItemGroup>
@@ -104,6 +106,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PortraitDataList.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtTranslation Include="zh_cn.ts" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
