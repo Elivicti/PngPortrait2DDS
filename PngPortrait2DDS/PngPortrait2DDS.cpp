@@ -5,7 +5,7 @@
 #include <QDir>
 #include <QPainter>
 #include <QMessageBox>
-#include <QProgressDialog>
+#include <QtConcurrent>
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -219,7 +219,7 @@ void PngPortrait2DDS::onImageOffsetYChanged(int value)
 	}
 }
 
-void PngPortrait2DDS::disableEditorWidget()
+void PngPortrait2DDS::disableEditorWidget(bool extra)
 {
 	ui->spbImageHeight->setEnabled(false);
 	ui->spbImageWidth->setEnabled(false);
@@ -229,8 +229,20 @@ void PngPortrait2DDS::disableEditorWidget()
 	ui->dspbPotraitScale->setEnabled(false);
 	ui->hsldPotraitScale->setEnabled(false);
 	ui->btnExport->setEnabled(false);
+
+	if (extra)
+	{
+		ui->lePngDirectory->setDisabled(true);
+		ui->btnBrowseDirectory->setDisabled(true);
+		ui->tbwPngItems->setDisabled(true);
+		ui->wPreview->setDisabled(true);
+		ui->cbExportDDS->setDisabled(true);
+		ui->cbExportRegistration->setDisabled(true);
+		ui->cbExportProperNameEffect->setDisabled(true);
+		ui->menuOptions->setDisabled(true);
+	}
 }
-void PngPortrait2DDS::enableEditorWidget()
+void PngPortrait2DDS::enableEditorWidget(bool all)
 {
 	ui->spbImageHeight->setEnabled(true);
 	ui->spbImageWidth->setEnabled(true);
@@ -240,6 +252,18 @@ void PngPortrait2DDS::enableEditorWidget()
 	ui->dspbPotraitScale->setEnabled(true);
 	ui->hsldPotraitScale->setEnabled(true);
 	onExportOptionChanged(0);
+
+	if (all)
+	{
+		ui->lePngDirectory->setEnabled(true);
+		ui->btnBrowseDirectory->setEnabled(true);
+		ui->tbwPngItems->setEnabled(true);
+		ui->wPreview->setEnabled(true);
+		ui->cbExportDDS->setEnabled(true);
+		ui->cbExportRegistration->setEnabled(true);
+		ui->cbExportProperNameEffect->setEnabled(true);
+		ui->menuOptions->setEnabled(true);
+	}
 }
 
 void PngPortrait2DDS::onExportOptionChanged(int state)
@@ -265,12 +289,9 @@ void PngPortrait2DDS::onExport()
 	}
 
 	auto func_export = [this, imgSize]() {
-
-		lbLog->setText(tr("Processing..."));
-
 		QProcess* nvdxt = new QProcess();
-
-
+		
+		qsizetype portraitCnt = data.size();
 		bool export_dds = ui->cbExportDDS->isChecked();
 		bool export_registration = ui->cbExportRegistration->isChecked();
 		bool export_effect = ui->cbExportProperNameEffect->isChecked();
@@ -331,18 +352,12 @@ void PngPortrait2DDS::onExport()
 		//		©À©¤effect.txt				// portrait's proper name effect (if enabled)
 		//		©¸©¤names.yml					// portrait's proper name effect (if enabled)
 
-		qsizetype portraitCnt = data.size();
+		
 		QString targetPng(output.absoluteFilePath("output.png").replace("/", "\\"));
-
-		QProgressDialog dlg(tr("Porcessing"), tr("Cancel"), 0, portraitCnt, this);
-		dlg.setWindowModality(Qt::WindowModal);
 
 		for (qsizetype i = 0; i < portraitCnt; i++)
 		{
-			dlg.setValue(i);
-
-			if (dlg.wasCanceled())
-				break;
+			lbLog->setText(tr("Processing (%1/%2)...").arg(i).arg(portraitCnt));
 
 			QFileInfo& file = data.at(i)->portrait;
 			QFileInfo targetDDS(output.absoluteFilePath(dds_path + "/" + file.fileName().replace(".png", ".dds")));
@@ -439,7 +454,6 @@ void PngPortrait2DDS::onExport()
 
 			registration.write("\t}\n}");
 			registration.close();
-
 #undef WritePortraitInfo
 		}
 
@@ -451,14 +465,20 @@ void PngPortrait2DDS::onExport()
 		}
 
 		delete nvdxt;
-
-		if (dlg.wasCanceled())
-			lbLog->setText(tr("Canceled."));
-		else
-			lbLog->setText(tr("Completed."));
 	};
+
+	this->disableEditorWidget(true);
+	QFutureWatcher<void>* watcher = new QFutureWatcher<void>;
+	connect(watcher, &QFutureWatcher<void>::finished, [this, watcher]() {
+		lbLog->setText(tr("Completed."));
+
+		watcher->deleteLater();
+		this->enableEditorWidget(true);
+	});
+
+	QFuture<void> future = QtConcurrent::run(func_export);
+	watcher->setFuture(future);
 	
-	func_export();
 }
 
 void PngPortrait2DDS::savePresetAsJson()

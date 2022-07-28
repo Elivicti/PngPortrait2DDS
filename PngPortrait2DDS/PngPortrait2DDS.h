@@ -48,8 +48,8 @@ protected:
 	virtual void dropEvent(QDropEvent* evt) override;
 
 private:
-	void disableEditorWidget();
-	void enableEditorWidget();
+	void disableEditorWidget(bool extra = false);
+	void enableEditorWidget(bool all = false);
 
 private:
 	Ui::PngPortrait2DDSClass* ui;
