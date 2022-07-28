@@ -38,8 +38,14 @@ private slots:
 	void onExportOptionChanged(int state);
 	void onExport();
 
+	void savePresetAsJson();
+	void loadPresetFromJson(const QString& file);
+
 protected:
 	virtual void resizeEvent(QResizeEvent* evt) override;
+
+	virtual void dragEnterEvent(QDragEnterEvent* evt) override;
+	virtual void dropEvent(QDropEvent* evt) override;
 
 private:
 	void disableEditorWidget();
@@ -52,6 +58,4 @@ private:
 
 	PortraitDataList data;
 	int currIndex;
-
-	
 };

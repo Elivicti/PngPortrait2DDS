@@ -22,8 +22,11 @@ public:
 
 
 	void setPortraitsInfo(const QStringList& portraits);
+	void appendPortraitInfo(const QString& pic, bool species, bool leader, bool ruler);
 
 	bool isUsingPortraitType(int row, PortraitUsingType t);
+
+	void clearContents();
 
 signals:
 	void tableLoadingCompleted();

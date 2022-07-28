@@ -2,20 +2,28 @@
 
 #include <QFileDialog>
 #include <QFileInfo>
-#include <QStandardItemModel>
 #include <QDir>
 #include <QPainter>
 #include <QMessageBox>
 #include <QProgressDialog>
 
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+
+#include <QDropEvent>
+#include <QMimeData>
+
 #include <QDebug>
 
 #define ScaleSliderMaxValue 1000
+#define DefaultScale 0.20
 
 PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::PngPortrait2DDSClass()), lbLog(new QLabel(this)), dataLoaded(false)
-	, data(0, 0, 0.20), currIndex(0)
+	, data(0, 0, DefaultScale), currIndex(-1)
 {
 	ui->setupUi(this);
 	ui->statusBar->addPermanentWidget(lbLog);
@@ -67,6 +75,13 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 
 	connect(ui->btnExport, &QPushButton::clicked, this, &PngPortrait2DDS::onExport);
 
+	connect(ui->actionSavePreset, &QAction::triggered, this, &PngPortrait2DDS::savePresetAsJson);
+	connect(ui->actionLoadPreset, &QAction::triggered, [this]() {
+		QString filename(QFileDialog::getOpenFileName(this, tr("Select Preset"), "./", tr("Json File(*.json)")));
+		this->loadPresetFromJson(filename);
+	});
+
+	this->setAcceptDrops(true);
 	this->disableEditorWidget();
 }
 
@@ -88,7 +103,7 @@ void PngPortrait2DDS::onBrowseDirectoryClicked()
 	{
 
 		data.clear();
-		ui->lePngDirectory->setText(path);
+		ui->lePngDirectory->setText(path.replace("/", "\\"));
 		QDir dir(path);
 		QStringList filter(QString("*.png"));
 		QFileInfoList pngSources = dir.entryInfoList(filter);
@@ -444,12 +459,194 @@ void PngPortrait2DDS::onExport()
 	};
 	
 	func_export();
-
-	//auto a = QtConcurrent::run(func_export);
-	
 }
+
+void PngPortrait2DDS::savePresetAsJson()
+{
+	if (!dataLoaded)
+	{
+		QMessageBox::critical(this, tr("Error"), tr("You must load any data before save."), tr("OK"));
+		return;
+	}
+
+	QString filename(QFileDialog::getSaveFileName(this, tr("Save Preset"), "./", tr("Json File(*.json)")));
+	if (!filename.isEmpty())
+	{
+		QJsonObject obj;
+
+		QJsonValue path(ui->lePngDirectory->text());
+
+		QJsonObject setting;
+		QJsonArray imgSize({ ui->spbImageWidth->value(), ui->spbImageHeight->value() });
+		QJsonArray defaultOffset({ data.defaultOffset().x(), data.defaultOffset().y() });
+		QJsonValue defaultScale(data.defaultScale());
+		setting.insert("Size", imgSize);
+		setting.insert("Offset", defaultOffset);
+		setting.insert("Scale", defaultScale);
+
+		QJsonObject exportOptions;
+		exportOptions.insert("DDS", QJsonValue(ui->cbExportDDS->isChecked()));
+		exportOptions.insert("Registration", QJsonValue(ui->cbExportRegistration->isChecked()));
+		exportOptions.insert("Proper Name Effect", QJsonValue(ui->cbExportProperNameEffect->isChecked()));
+
+		QJsonArray portraits;
+		qsizetype cnt = data.size();
+		for (qsizetype i = 0; i < cnt; i++)
+		{
+			QJsonObject p;
+			p.insert("Use Types", QJsonArray({
+					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Species),
+					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Leader),
+					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Ruler)
+				}));
+			bool useSeperateSetting = data.at(i)->useSeperateSetting;
+			p.insert("Use Seperate Setting", QJsonValue(useSeperateSetting));
+			if (useSeperateSetting)
+			{
+				p.insert("Offset", QJsonArray({
+					data.offset(i).x(),
+					data.offset(i).y()
+					}));
+				p.insert("Scale", QJsonValue(data.scale(i)));
+			}
+			portraits.append(p);
+		}
+
+		obj.insert("Path", path);
+		obj.insert("Default Setting", setting);
+		obj.insert("Export Options", exportOptions);
+		obj.insert("Portraits", portraits);
+
+		QFile json(filename);
+		json.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
+		json.write(QJsonDocument(obj).toJson());
+
+		json.close();
+	}
+}
+
+void PngPortrait2DDS::loadPresetFromJson(const QString& file)
+{
+	while (!file.isEmpty())
+	{
+		currIndex = -1;
+
+		QFile json(file);
+		json.open(QIODevice::ReadOnly | QIODevice::Text);
+		QJsonDocument doc(QJsonDocument::fromJson(json.readAll()).object());
+		if (doc.isNull())
+			break;
+
+		QJsonObject obj(doc.object());
+		json.close();
+
+		QString path(obj.value("Path").toString());
+		QDir dir(path);
+		if (!dir.exists())
+			break;
+
+		QJsonObject defaultSetting(obj.value("Default Setting").toObject());
+		if (defaultSetting.isEmpty())
+			break;
+		QJsonValue scale(defaultSetting.value("Scale"));
+		QJsonArray offset(defaultSetting.value("Offset").toArray());
+		QJsonArray imgSize(defaultSetting.value("Size").toArray());
+
+		QJsonObject exportOptions(obj.value("Export Options").toObject());
+		if (exportOptions.isEmpty())
+			break;
+
+		if (!scale.isNull())
+		{
+			data.setDefaultScale(scale.toDouble());
+			ui->dspbPotraitScale->setValue(data.defaultScale());
+		}
+		if (!offset.isEmpty())
+		{
+			data.setDefaultOffset(offset.at(0).toInt(), offset.at(1).toInt());
+			ui->spbPortraitOffsetX->setValue(offset.at(0).toInt());
+			ui->spbPortraitOffsetY->setValue(offset.at(1).toInt());
+		}
+		if (!imgSize.isEmpty())
+		{
+			ui->spbImageWidth->setValue(imgSize.at(0).toInt());
+			ui->spbImageHeight->setValue(imgSize.at(1).toInt());
+		}
+		
+
+		ui->cbExportDDS->setChecked(exportOptions.value("DDS").toBool());
+		ui->cbExportRegistration->setChecked(exportOptions.value("Registration").toBool());
+		ui->cbExportProperNameEffect->setChecked(exportOptions.value("Proper Name Effect").toBool());
+
+
+		QJsonArray portraits(obj.value("Portraits").toArray());
+		data.clear();
+		ui->tbwPngItems->clearContents();
+		ui->lePngDirectory->setText(path);
+		QStringList filter(QString("*.png"));
+		QFileInfoList pngSources = dir.entryInfoList(filter);
+
+		if (portraits.isEmpty())
+		{
+			for (auto& png : pngSources)
+				data.append(new PortraitData(png));
+			ui->tbwPngItems->setPortraitsInfo(dir.entryList(filter));
+		}
+		else
+		{
+			int cnt = pngSources.size();
+			for (int i = 0; i < cnt; i++)
+			{
+				data.append(new PortraitData(pngSources[i]));
+				QJsonObject portrait(portraits.at(i).toObject());
+				if (!portrait.isEmpty())
+				{
+					data.at(i)->useSeperateSetting = portrait.value("Use Seperate Setting").toBool();
+					if (data.at(i)->useSeperateSetting)
+					{
+						QJsonArray offset(portrait.value("Offset").toArray());
+						data.at(i)->offset.setX(offset[0].toInt());
+						data.at(i)->offset.setY(offset[1].toInt());
+						data.at(i)->scale = portrait.value("Scale").toDouble();
+					}
+
+					QJsonArray usingTypes(portrait.value("Use Types").toArray());
+					ui->tbwPngItems->appendPortraitInfo(
+						pngSources[i].fileName(),
+						usingTypes[0].toBool(),
+						usingTypes[1].toBool(),
+						usingTypes[2].toBool()
+					);
+				}
+			}
+		}
+
+		emit ui->tbwPngItems->tableLoadingCompleted();
+
+		dataLoaded = true;
+		this->enableEditorWidget();
+
+		return;
+	}
+
+	QMessageBox::critical(this, tr("Error"), tr("Invalid Json File."), tr("OK"));
+}
+
 
 void PngPortrait2DDS::resizeEvent(QResizeEvent* evt)
 {
 	this->onImageSizeChanged(0);
+}
+
+void PngPortrait2DDS::dragEnterEvent(QDragEnterEvent* evt)
+{
+	int cmp = evt->mimeData()->urls().at(0).fileName().right(4).compare("json", Qt::CaseSensitivity::CaseInsensitive);
+	if (cmp == 0)
+		evt->acceptProposedAction();
+	else
+		evt->ignore();
+}
+void PngPortrait2DDS::dropEvent(QDropEvent* evt)
+{
+	this->loadPresetFromJson(evt->mimeData()->urls().at(0).toLocalFile());
 }

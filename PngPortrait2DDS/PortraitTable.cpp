@@ -8,6 +8,7 @@
 #include <QProgressDialog>
 #include <QtConcurrent>
 
+#include <array>
 
 PortraitTable::PortraitTable(QWidget *parent)
 	: QTableWidget(parent)
@@ -17,7 +18,10 @@ PortraitTable::PortraitTable(QWidget *parent)
 	this->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
 	this->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
 
-	
+	connect(this, &PortraitTable::tableLoadingCompleted, [this]() {
+		setHeaders();
+		this->viewport()->update();
+	});
 }
 
 PortraitTable::~PortraitTable()
@@ -76,15 +80,49 @@ void PortraitTable::setPortraitsInfo(const QStringList& portraits)
 			this->setCellWidget(row, i, widget);
 		}
 	}
-	
-
-	setHeaders();
-	this->viewport()->update();
 	emit tableLoadingCompleted();
+}
 
+void PortraitTable::appendPortraitInfo(const QString& pic, bool species, bool leader, bool ruler)
+{
+	int row = this->rowCount();
+	this->setRowCount(row + 1);
+
+	cbUsingTypes.append(QList<QCheckBox*>());
+	
+	std::array<int, 3> state = { species, leader, ruler };
+
+	this->setItem(row, 0, new QTableWidgetItem(pic));
+	for (int i = 1; i < 4; i++)
+	{
+		QWidget* widget = new QWidget(this);
+		QGridLayout* layout = new QGridLayout(widget);
+		QCheckBox* box = new QCheckBox(widget);
+		cbUsingTypes[row].append(box);
+
+		box->setObjectName(QString::fromUtf8("cbIsUsingThisType"));
+		box->setChecked(state[i - 1]);
+		layout->addWidget(box);
+		layout->setAlignment(Qt::AlignCenter);
+		widget->setLayout(layout);
+		this->setCellWidget(row, i, widget);
+	}
 }
 
 bool PortraitTable::isUsingPortraitType(int row, PortraitUsingType t)
 {
 	return cbUsingTypes[row][(int)t]->isChecked();
+}
+
+void PortraitTable::clearContents()
+{
+	for (auto& row : cbUsingTypes)
+	{
+		for (auto cb : row)
+			delete cb;
+		row.clear();
+	}
+	cbUsingTypes.clear();
+	QTableWidget::clearContents();
+	this->setRowCount(0);
 }
