@@ -639,6 +639,8 @@ void PngPortrait2DDS::loadPresetFromJson(const QString& file)
 						usingTypes[2].toBool()
 					);
 				}
+				else
+					ui->tbwPngItems->appendPortraitInfo(pngSources[i].fileName(), true, true, true);
 			}
 		}
 
