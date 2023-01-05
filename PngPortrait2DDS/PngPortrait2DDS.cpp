@@ -400,7 +400,7 @@ void PngPortrait2DDS::onExport()
 			{
 				QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
 
-				QString reg("\t{ %1 = \"gfx/models/portraits/%2/%3\" }\n");
+				QString reg("\t%1 = { texturefile = \"gfx/models/portraits/%2/%3\" }\n");
 
 				reg_info.dds_path += reg.arg(portrait_id).arg(dds_path).arg(targetDDS.fileName());
 
