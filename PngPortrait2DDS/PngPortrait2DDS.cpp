@@ -15,6 +15,8 @@
 #include <QDropEvent>
 #include <QMimeData>
 
+#include <SOIL2/SOIL2.h>
+
 #include <QDebug>
 
 #define ScaleSliderMaxValue 1000
@@ -298,7 +300,7 @@ void PngPortrait2DDS::onExport()
 		bool export_effect = ui->cbExportProperNameEffect->isChecked();
 
 		// initialize base image
-		QPixmap img(imgSize);
+		QImage img(imgSize, QImage::Format_RGBA8888);
 
 		// create file structure
 		QDir output(data.at(0)->portrait.absoluteDir());
@@ -341,20 +343,25 @@ void PngPortrait2DDS::onExport()
 
 			yml.setFileName(output.absoluteFilePath(dds_path + "_name_effect.yml"));
 			yml.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-			yml_stream.setGenerateByteOrderMark(true);
+			yml_stream.setGenerateByteOrderMark(true);	// UTF8 With BOM
 			yml_stream << "l_simp_chinese:\n";
 		}
 
 		// In the end, file structure will be something like this:
-		//  path/							// where png files are stored
-		//  path_output/					// where all generated files are
-		//		©À©¤path/						// generated dds goes here    (if enabled)
-		//		©À©¤registration.txt			// portrait registration file (if enabled)
-		//		©À©¤effect.txt				// portrait's proper name effect (if enabled)
-		//		©¸©¤names.yml					// portrait's proper name effect (if enabled)
+		// path/							// where png files are stored
+		// path_output/						// where all generated files are
+		//  ©À©¤path/							// generated dds goes here    (if enabled)
+		//	©À©¤registration.txt				// portrait registration file (if enabled)
+		//	©À©¤effect.txt					// portrait's proper name effect (if enabled)
+		//	©¸©¤names.yml						// portrait's proper name effect (if enabled)
 
 		
 		QString targetPng(output.absoluteFilePath("output.png").replace("/", "\\"));
+		QStringList args({"-dxt3", "-file", targetPng, "-alpha", "-output"});
+		/*args << "-dxt3"
+			<< "-file" << targetPng
+			<< "-alpha"
+			<< "-output";*/
 
 		for (qsizetype i = 0; i < portraitCnt; i++)
 		{
@@ -368,7 +375,7 @@ void PngPortrait2DDS::onExport()
 				img.fill(QColor(0, 0, 0, 0));
 
 				// load portrait
-				QPixmap portrait(file.absoluteFilePath());
+				QImage portrait(file.absoluteFilePath());
 
 				// read preset
 				QPoint offset = data.offset(i);
@@ -376,24 +383,55 @@ void PngPortrait2DDS::onExport()
 
 				// draw & save
 				QPainter painter(&img);
-				painter.drawPixmap(offset,
-					portrait.scaled(portrait.size() * scale,
+
+				painter.drawImage(
+					offset,
+					portrait.scaled(
+						portrait.size()* scale,
 						Qt::AspectRatioMode::KeepAspectRatio,
 						Qt::TransformationMode::SmoothTransformation
-					));
+					)
+				);
 
-				img.save(targetPng);
+				/* reminder
+				QImage *pTexture = [Your initial image]
 
-				QStringList args;
-				args << "-dxt3"
-					<< "-file" << targetPng
-					<< "-alpha"
-					<< "-output" << targetDDS.absoluteFilePath().replace("/", "\\");
+				QImage imgProperlyFormatted = pTexture->convertToFormat(QImage::Format_RGBA8888);
+				SOIL_save_image_quality(
+					"MyTexture.dds",
+					SOIL_SAVE_TYPE_DDS,
+					imgProperlyFormatted.width(),
+					imgProperlyFormatted.height(),
+					4,
+					imgProperlyFormatted.bits(),
+					0
+				);
+				*/
+
+				// TODO:
+				// make conversion from png to dds in multithreads
+
+				// save as dxt5
+				SOIL_save_image_quality(
+					"",
+					SOIL_SAVE_TYPE_DDS,
+					img.width(),
+					img.height(),
+					4,
+					img.bits(),
+					0
+				);
+
+				//img.save(targetPng);
+
+				//args << targetDDS.absoluteFilePath().replace("/", "\\");
 
 				// png2dds command line
 				// nvdxt.exe -file input.png -alpha [-scale 2] -output output.dds
-				nvdxt->start("./nvdxt.exe", args);
-				nvdxt->waitForFinished();
+				//nvdxt->start("./nvdxt.exe", args);
+				//nvdxt->waitForFinished();
+
+				//args.pop_back();
 			}
 
 			if (export_registration)
@@ -421,8 +459,8 @@ void PngPortrait2DDS::onExport()
 				QString dds_name(targetDDS.completeBaseName());
 				yml_stream << " NAME_" << dds_name << ":0 \"" << dds_name << "\"\n";
 
-				QString effectline(QString("\t1 = { portrait = %1  set_name = %2 }\n"));
-				effect.write(effectline.arg(portrait_id).arg("NAME_" + dds_name).toUtf8());
+				QString effectline(QString("\t1 = { portrait = %1  set_name = NAME_%2  set_leader_flag = flag_%2 }\n"));
+				effect.write(effectline.arg(portrait_id).arg(dds_name).toUtf8());
 			}
 		}
 
