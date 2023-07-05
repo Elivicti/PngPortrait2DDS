@@ -291,233 +291,185 @@ void PngPortrait2DDS::onExport()
 		return;
 	}
 
-	auto func_export = [this, imgSize]() {
-		QProcess* nvdxt = new QProcess();
-		
-		qsizetype portraitCnt = data.size();
-		bool export_dds = ui->cbExportDDS->isChecked();
-		bool export_registration = ui->cbExportRegistration->isChecked();
-		bool export_effect = ui->cbExportProperNameEffect->isChecked();
+	qsizetype portraitCnt = data.size();
+	bool export_dds = ui->cbExportDDS->isChecked();
+	bool export_registration = ui->cbExportRegistration->isChecked();
+	bool export_effect = ui->cbExportProperNameEffect->isChecked();
 
-		// initialize base image
-		QImage img(imgSize, QImage::Format_RGBA8888);
+	// create file structure
+	QDir output(data.at(0)->portrait.absoluteDir());
+	QString output_name = output.dirName() + QString("_output");
+	QString dds_path = output.dirName();
+	output.cdUp();
+	output.mkdir(output_name);
+	output.cd(output_name);
 
-		// create file structure
-		QDir output(data.at(0)->portrait.absoluteDir());
-		QString output_name = output.dirName() + QString("_output");
-		QString dds_path = output.dirName();
-		output.cdUp();
-		output.mkdir(output_name);
-		output.cd(output_name);
+	// !! This string must be created after cd
+	QString dds_file = output.absoluteFilePath(dds_path + "/%1.dds");
 
-		if (export_dds)
-		{
-			output.mkdir(dds_path);
-		}
+	if (export_dds)
+	{
+		output.mkdir(dds_path);
 
-		QFile registration;
-		struct
-		{
-			QString dds_path;
-			QString game_setup;
-			QString species;
-			QString& pop = species;
-			QString leader;
-			QString ruler;
-		} reg_info;
+		QFutureWatcher<void>* watcher = new QFutureWatcher<void>;
+
+		// TODO: display progress info to a dialog
+		connect(watcher, &QFutureWatcher<void>::progressValueChanged, [this](int i) {
+			lbLog->setText(tr("Processing (%1/%2)...").arg(i).arg(data.size()));
+		});
+		connect(watcher, &QFutureWatcher<void>::finished, [this, watcher]() {
+			lbLog->setText(tr("Completed."));
+
+			watcher->deleteLater();
+			this->enableEditorWidget(true);
+		});
+
+		auto png2dds = [this, dds_file, imgSize](PortraitData* ii) {
+			QFileInfo& file = ii->portrait;
+			std::string ddspath = dds_file.arg(file.baseName()).toStdString();
+
+			// load portrait
+			QImage portrait(file.absoluteFilePath());
+
+			// read preset
+			QPoint offset = data.offset(ii);
+			double scale = data.scale(ii);
+
+			// draw & save
+			QImage img(imgSize, QImage::Format_RGBA8888);
+			img.fill(QColor(0, 0, 0, 0));
+			QPainter painter(&img);
+
+			painter.drawImage(
+				offset, portrait.scaled(
+					portrait.size() * scale,
+					Qt::AspectRatioMode::KeepAspectRatio,
+					Qt::TransformationMode::SmoothTransformation
+				)
+			);
+
+			// save as dxt5
+			SOIL_save_image_quality(
+				ddspath.c_str(), SOIL_SAVE_TYPE_DDS,
+				img.width(), img.height(),
+				4,
+				img.bits(),
+				0
+			);
+		};
+
+		QFuture<void> future = QtConcurrent::map(data.begin(), data.end(), png2dds);
+		watcher->setFuture(future);
+	}
+
+	QFile registration;
+	struct {
+		QString dds_path;
+		QString game_setup;
+		QString species;
+		QString& pop = species;
+		QString leader;
+		QString ruler;
+	} reg_info;
+	if (export_registration)
+	{
+		registration.setFileName(output.absoluteFilePath(dds_path + ".txt"));
+		registration.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
+	}
+
+	QFile effect;
+	QFile yml;
+	QTextStream yml_stream(&yml);
+	if (export_effect)
+	{
+		effect.setFileName(output.absoluteFilePath(dds_path + "_name_effect.txt"));
+		effect.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
+		effect.write("random_list = {\n");
+
+		yml.setFileName(output.absoluteFilePath(dds_path + "_name_effect.yml"));
+		yml.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
+		yml_stream.setGenerateByteOrderMark(true);	// UTF8 With BOM
+		yml_stream << "l_simp_chinese:\n";
+	}
+
+	// In the end, file structure will be something like this:
+	// path/							// where png files are stored
+	// path_output/						// where all generated files are
+	//  ©À©¤path/							// generated dds goes here    (if enabled)
+	//	©À©¤registration.txt				// portrait registration file (if enabled)
+	//	©À©¤effect.txt					// portrait's proper name effect (if enabled)
+	//	©¸©¤names.yml						// portrait's proper name effect (if enabled)
+
+
+	for (qsizetype i = 0; i < portraitCnt; i++)
+	{
+		QFileInfo& file = data.at(i)->portrait;
+		QFileInfo targetDDS(dds_file.arg(file.baseName()));
+
 		if (export_registration)
 		{
-			registration.setFileName(output.absoluteFilePath(dds_path + ".txt"));
-			registration.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
+			QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
 
+			QString reg("\t%1 = { texturefile = \"gfx/models/portraits/%2/%3\" }\n");
+
+			reg_info.dds_path += reg.arg(portrait_id).arg(dds_path).arg(targetDDS.fileName());
+
+			((reg_info.game_setup += "\t\t\t\t\t") += portrait_id) += "\n";
+
+			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Species))
+				((reg_info.species += "\t\t\t\t\t") += portrait_id) += "\n";
+			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Leader))
+				((reg_info.leader += "\t\t\t\t\t") += portrait_id) += "\n";
+			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Ruler))
+				((reg_info.ruler += "\t\t\t\t\t") += portrait_id) += "\n";
 		}
 
-		QFile effect;
-		QFile yml;
-		QTextStream yml_stream(&yml);
 		if (export_effect)
 		{
-			effect.setFileName(output.absoluteFilePath(dds_path + "_name_effect.txt"));
-			effect.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-			effect.write("random_list = {\n");
+			QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
 
-			yml.setFileName(output.absoluteFilePath(dds_path + "_name_effect.yml"));
-			yml.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-			yml_stream.setGenerateByteOrderMark(true);	// UTF8 With BOM
-			yml_stream << "l_simp_chinese:\n";
+			QString dds_name(targetDDS.completeBaseName());
+			yml_stream << " NAME_" << dds_name << ":0 \"" << dds_name << "\"\n";
+
+			QString effectline(QString("\t1 = { portrait = %1  set_name = NAME_%2  set_leader_flag = flag_%2 }\n"));
+			effect.write(effectline.arg(portrait_id).arg(dds_name).toUtf8());
 		}
+	}
 
-		// In the end, file structure will be something like this:
-		// path/							// where png files are stored
-		// path_output/						// where all generated files are
-		//  ©À©¤path/							// generated dds goes here    (if enabled)
-		//	©À©¤registration.txt				// portrait registration file (if enabled)
-		//	©À©¤effect.txt					// portrait's proper name effect (if enabled)
-		//	©¸©¤names.yml						// portrait's proper name effect (if enabled)
+	if (export_registration)
+	{
 
-		
-		QString targetPng(output.absoluteFilePath("output.png").replace("/", "\\"));
-		QStringList args({"-dxt3", "-file", targetPng, "-alpha", "-output"});
-		/*args << "-dxt3"
-			<< "-file" << targetPng
-			<< "-alpha"
-			<< "-output";*/
-
-		for (qsizetype i = 0; i < portraitCnt; i++)
-		{
-			lbLog->setText(tr("Processing (%1/%2)...").arg(i).arg(portraitCnt));
-
-			QFileInfo& file = data.at(i)->portrait;
-			QFileInfo targetDDS(output.absoluteFilePath(dds_path + "/" + file.fileName().replace(".png", ".dds")));
-
-			if (export_dds)
-			{
-				img.fill(QColor(0, 0, 0, 0));
-
-				// load portrait
-				QImage portrait(file.absoluteFilePath());
-
-				// read preset
-				QPoint offset = data.offset(i);
-				double scale = data.scale(i);
-
-				// draw & save
-				QPainter painter(&img);
-
-				painter.drawImage(
-					offset,
-					portrait.scaled(
-						portrait.size()* scale,
-						Qt::AspectRatioMode::KeepAspectRatio,
-						Qt::TransformationMode::SmoothTransformation
-					)
-				);
-
-				/* reminder
-				QImage *pTexture = [Your initial image]
-
-				QImage imgProperlyFormatted = pTexture->convertToFormat(QImage::Format_RGBA8888);
-				SOIL_save_image_quality(
-					"MyTexture.dds",
-					SOIL_SAVE_TYPE_DDS,
-					imgProperlyFormatted.width(),
-					imgProperlyFormatted.height(),
-					4,
-					imgProperlyFormatted.bits(),
-					0
-				);
-				*/
-
-				// TODO:
-				// make conversion from png to dds in multithreads
-
-				// save as dxt5
-				SOIL_save_image_quality(
-					"",
-					SOIL_SAVE_TYPE_DDS,
-					img.width(),
-					img.height(),
-					4,
-					img.bits(),
-					0
-				);
-
-				//img.save(targetPng);
-
-				//args << targetDDS.absoluteFilePath().replace("/", "\\");
-
-				// png2dds command line
-				// nvdxt.exe -file input.png -alpha [-scale 2] -output output.dds
-				//nvdxt->start("./nvdxt.exe", args);
-				//nvdxt->waitForFinished();
-
-				//args.pop_back();
-			}
-
-			if (export_registration)
-			{
-				QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
-
-				QString reg("\t%1 = { texturefile = \"gfx/models/portraits/%2/%3\" }\n");
-
-				reg_info.dds_path += reg.arg(portrait_id).arg(dds_path).arg(targetDDS.fileName());
-
-				((reg_info.game_setup += "\t\t\t\t\t") += portrait_id) += "\n";
-
-				if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Species))
-					((reg_info.species += "\t\t\t\t\t") += portrait_id) += "\n";
-				if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Leader))
-					((reg_info.leader += "\t\t\t\t\t") += portrait_id) += "\n";
-				if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Ruler))
-					((reg_info.ruler += "\t\t\t\t\t") += portrait_id) += "\n";
-			}
-
-			if (export_effect)
-			{
-				QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
-
-				QString dds_name(targetDDS.completeBaseName());
-				yml_stream << " NAME_" << dds_name << ":0 \"" << dds_name << "\"\n";
-
-				QString effectline(QString("\t1 = { portrait = %1  set_name = NAME_%2  set_leader_flag = flag_%2 }\n"));
-				effect.write(effectline.arg(portrait_id).arg(dds_name).toUtf8());
-			}
-		}
-
-		if (export_dds)
-		{
-			QFile(targetPng).remove();
-		}
-
-		if (export_registration)
-		{
-
-			registration.write("portraits = {\n");
-			registration.write(reg_info.dds_path.toUtf8());
-			registration.write("}\n");
-			registration.write(QString(
-				"portrait_groups = {\n"
-				"\t%1 = {\n"
-				"\t\tdefault = %2\n"
-			).arg(dds_path).arg(dds_path + "_001").toUtf8());
+		registration.write("portraits = {\n");
+		registration.write(reg_info.dds_path.toUtf8());
+		registration.write("}\n");
+		registration.write(QString(
+			"portrait_groups = {\n"
+			"\t%1 = {\n"
+			"\t\tdefault = %2\n"
+		).arg(dds_path).arg(dds_path + "_001").toUtf8());
 #define WritePortraitInfo(reg, key)											\
 	reg.write("\t\t"#key" = {\n\t\t\tadd = {\n\t\t\t\tportraits = {\n");	\
 	reg.write(reg_info.key.toUtf8());										\
 	reg.write("\t\t\t\t}\n\t\t\t}\n\t\t}\n");
 
-			WritePortraitInfo(registration, game_setup);
-			WritePortraitInfo(registration, species);
-			WritePortraitInfo(registration, pop);
-			WritePortraitInfo(registration, leader);
-			WritePortraitInfo(registration, ruler);
+		WritePortraitInfo(registration, game_setup);
+		WritePortraitInfo(registration, species);
+		WritePortraitInfo(registration, pop);
+		WritePortraitInfo(registration, leader);
+		WritePortraitInfo(registration, ruler);
 
-			registration.write("\t}\n}");
-			registration.close();
+		registration.write("\t}\n}");
+		registration.close();
 #undef WritePortraitInfo
-		}
+	}
 
-		if (export_effect)
-		{
-			yml.close();
-			effect.write("}");
-			effect.close();
-		}
+	if (export_effect)
+	{
+		yml.close();
+		effect.write("}");
+		effect.close();
+	}
 
-		delete nvdxt;
-	};
-
-	this->disableEditorWidget(true);
-	QFutureWatcher<void>* watcher = new QFutureWatcher<void>;
-	connect(watcher, &QFutureWatcher<void>::finished, [this, watcher]() {
-		lbLog->setText(tr("Completed."));
-
-		watcher->deleteLater();
-		this->enableEditorWidget(true);
-	});
-
-	QFuture<void> future = QtConcurrent::run(func_export);
-	watcher->setFuture(future);
-	
 }
 
 void PngPortrait2DDS::savePresetAsJson()

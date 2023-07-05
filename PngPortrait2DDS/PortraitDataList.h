@@ -28,12 +28,17 @@ public:
 
 	inline qsizetype size() const { return data.size() - 1; }
 
+	inline QList<PortraitData*>::iterator begin() { return ++data.begin(); }
+	inline QList<PortraitData*>::iterator end() { return data.end(); }
+
 	void clear();
 public:
 #define GetIndex(i) ((i + 1) * data.at(i + 1)->useSeperateSetting)
 	inline QFileInfo& portrait(qsizetype i) { return data.at(i + 1)->portrait; }
 	inline QPoint& offset(qsizetype i) { return data.at(GetIndex(i))->offset; }
+	inline QPoint& offset(PortraitData* p) { return p->useSeperateSetting ? p->offset : data.at(0)->offset; }
 	inline double& scale(qsizetype i) { return data.at(GetIndex(i))->scale; }
+	inline double& scale(PortraitData* p) { return p->useSeperateSetting ? p->scale : data.at(0)->scale; }
 
 	inline void setOffsetX(qsizetype i, int x) { data.at(GetIndex(i))->offset.setX(x); }
 	inline void setOffsetY(qsizetype i, int y) { data.at(GetIndex(i))->offset.setY(y); }
