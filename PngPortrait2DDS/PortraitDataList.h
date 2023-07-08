@@ -45,7 +45,7 @@ public:
 	inline void setOffset(qsizetype i, const QPoint& offset) { data.at(GetIndex(i))->offset = offset; }
 	inline void setOffset(qsizetype i, int x, int y) { data.at(GetIndex(i))->offset = { x, y }; }
 	inline void setScale(qsizetype i, double scale) { data.at(GetIndex(i))->scale = scale; }
-#undef GetIndex(i)
+#undef GetIndex
 
 	inline QPoint& defaultOffset() { return data.at(0)->offset; }
 	inline double& defaultScale() { return data.at(0)->scale; }
