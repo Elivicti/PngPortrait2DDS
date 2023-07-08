@@ -5,9 +5,6 @@
 #include <QLayout>
 #include <QCheckBox>
 
-#include <QProgressDialog>
-#include <QtConcurrent>
-
 #include <array>
 
 PortraitTable::PortraitTable(QWidget *parent)
@@ -50,13 +47,12 @@ void PortraitTable::resizeHeaders()
 
 void PortraitTable::setPortraitsInfo(const QStringList& portraits)
 {
-	int maxRow = portraits.size();
-
 	this->clear();
 	for (auto& row : cbUsingTypes)
 		row.clear();
 	cbUsingTypes.clear();
 
+	int maxRow = portraits.size();
 	this->setRowCount(maxRow);
 
 	for (int row = 0; row < maxRow; row++)
