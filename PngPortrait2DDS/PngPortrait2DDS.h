@@ -8,8 +8,7 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class PngPortrait2DDSClass; };
 QT_END_NAMESPACE
 
-#include <QFileInfo>
-#include <QProcess>
+class QProgressBar;
 
 
 class PngPortrait2DDS : public QMainWindow
@@ -58,4 +57,6 @@ private:
 
 	PortraitDataList data;
 	int currIndex;
+
+	QProgressBar* pgbar;
 };
