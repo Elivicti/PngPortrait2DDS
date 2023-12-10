@@ -79,6 +79,44 @@ void PortraitTable::setPortraitsInfo(const QStringList& portraits)
 	emit tableLoadingCompleted();
 }
 
+void PortraitTable::loadPortraitsInfo(const PresetData& preset)
+{
+	portraits = preset.portraitData();
+	this->clear();
+	for (auto& row : cbUsingTypes)
+		row.clear();
+	cbUsingTypes.clear();
+
+	int maxRow = portraits->size();
+	this->setRowCount(maxRow);
+	cbUsingTypes.fill(QList<QCheckBox*>{}, maxRow);
+
+	for (int row = 0; row < maxRow; row++)
+	{
+		auto usage{ preset.usage(portraits->at(row).fileName()) };
+		int use_types[3] = {
+			usage.species, usage.leaders, usage.rulers
+		};
+		this->setItem(row, 0, new QTableWidgetItem(portraits->at(row).fileName()));
+		for (int i = 1; i < 4; i++)
+		{
+			QWidget* widget = new QWidget(this);
+			QGridLayout* layout = new QGridLayout(widget);
+			QCheckBox* box = new QCheckBox(widget);
+			cbUsingTypes[row].append(box);
+
+			box->setObjectName(QString::fromUtf8("cbIsUsingThisType"));
+			box->setChecked(use_types[i - 1]);
+			layout->addWidget(box);
+			layout->setAlignment(Qt::AlignCenter);
+			widget->setLayout(layout);
+			this->setCellWidget(row, i, widget);
+		}
+	}
+	emit tableLoadingCompleted();
+
+}
+
 void PortraitTable::appendPortraitInfo(const QString& pic, bool species, bool leader, bool ruler)
 {
 	int row = this->rowCount();

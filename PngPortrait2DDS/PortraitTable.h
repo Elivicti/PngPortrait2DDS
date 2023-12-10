@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QTableWidget>
-#include <QFileInfo>
+#include "PresetManager.h"
 
 class QCheckBox;
 
@@ -24,6 +24,8 @@ public:
 	void setPortraitsInfo(const QStringList& portraits);
 	void appendPortraitInfo(const QString& pic, bool species, bool leader, bool ruler);
 
+	void loadPortraitsInfo(const PresetData& preset);
+
 	bool isUsingPortraitType(int row, PortraitUsingType t);
 
 	void clearContents();
@@ -38,6 +40,6 @@ private:
 	void setHeaders();
 	void resizeHeaders();
 private:
-	
+	PresetData::SharedDataPointer portraits;
 	QList<QList<QCheckBox*>> cbUsingTypes;
 };

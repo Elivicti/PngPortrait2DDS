@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_PngPortrait2DDS.h"
-#include "PortraitDataList.h"
+#include "PresetManager.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class PngPortrait2DDSClass; };
@@ -55,7 +55,7 @@ private:
 	QLabel* lbLog;
 	bool dataLoaded;
 
-	PortraitDataList data;
+	PresetData data;
 	int currIndex;
 
 	QProgressBar* pgbar;

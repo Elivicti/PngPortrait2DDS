@@ -1,4 +1,5 @@
 #include "PngPortrait2DDS.h"
+#include "GlobalConfigManager.h"
 
 #include <QProgressBar>
 #include <QFileDialog>
@@ -8,11 +9,6 @@
 #include <QMessageBox>
 #include <QtConcurrent>
 
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-
 #include <QDropEvent>
 #include <QMimeData>
 
@@ -21,33 +17,46 @@
 #include <QDebug>
 
 #define ScaleSliderMaxValue 1000
-#define DefaultScale 0.20
+#define DefaultScale (gConfig->scale())
 
 PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::PngPortrait2DDSClass()), lbLog(new QLabel(this)), dataLoaded(false)
-	, data(0, 0, DefaultScale), currIndex(-1), pgbar(new QProgressBar)
+	, data{gConfig->imageSize(), gConfig->offset(), DefaultScale }
+	, currIndex(0), pgbar(new QProgressBar)
 {
+	// init ui
 	ui->setupUi(this);
 	ui->statusBar->addPermanentWidget(lbLog);
+	ui->spbImageWidth->setValue(data.imageSize().width());
+	ui->spbImageHeight->setValue(data.imageSize().height());
+	ui->hsldPotraitScale->setValue(data->defaultScale() * ScaleSliderMaxValue);
+	ui->dspbPotraitScale->setValue(data->defaultScale());
+	ui->cbExportDDS->setChecked(data.exportDDS());
+	ui->cbExportRegistration->setChecked(data.exportRegistration());
+	ui->cbExportProperNameEffect->setChecked(data.exportProperNameEffect());
+
 
 	connect(ui->btnBrowseDirectory, &QPushButton::clicked, this, &PngPortrait2DDS::onBrowseDirectoryClicked);
 
 	connect(ui->tbwPngItems, &PortraitTable::tableLoadingCompleted, this, &PngPortrait2DDS::onTableLoadingCompleted);
-
 	connect(ui->tbwPngItems, &QAbstractItemView::activated, this, &PngPortrait2DDS::onPortraitSelected);
 
 	connect(ui->cbUseSeperateSetting, &QCheckBox::stateChanged, this, &PngPortrait2DDS::onUseSeperateSettingStateChanged);
 
 	connect(ui->dspbPotraitScale, &QDoubleSpinBox::valueChanged, [this](double value) {
-		data.setScale(currIndex, value);
+		if (data->at(currIndex).independent_setting)
+			data->setScale(currIndex, value);
+		else
+			data->setDefaultScale(value);
+
 		ui->hsldPotraitScale->setValue(value * ScaleSliderMaxValue);
 		ui->wPreview->scalePng(value);
 		ui->wPreview->repaint();
 	});
 	connect(ui->hsldPotraitScale, &QSlider::sliderMoved, [this](int value) {
 		double scale = (double)value / (double)ScaleSliderMaxValue;
-		data.setScale(currIndex, scale);
+		data->setScale(currIndex, scale);
 		ui->dspbPotraitScale->setValue(scale);
 		ui->wPreview->scalePng(scale);
 		ui->wPreview->repaint();
@@ -60,7 +69,11 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	connect(ui->wPreview, &PreviewWidget::imageOffsetChangedByCursor, [this](const QPoint& p) {
 		ui->spbPortraitOffsetX->setValue(p.x());
 		ui->spbPortraitOffsetY->setValue(p.y());
-		data.setOffset(currIndex, p);
+		if (data->useIndependentSettings(currIndex))
+			data->setOffset(currIndex, p);
+		else
+			data->setDefaultOffset(p);
+		
 	});
 	connect(ui->spbPortraitOffsetX, &QSpinBox::valueChanged, this, &PngPortrait2DDS::onImageOffsetXChanged);
 	connect(ui->spbPortraitOffsetY, &QSpinBox::valueChanged, this, &PngPortrait2DDS::onImageOffsetYChanged);
@@ -108,29 +121,30 @@ void PngPortrait2DDS::onBrowseDirectoryClicked()
 	QString path = QFileDialog::getExistingDirectory(this, tr("Select Portrait Directory"), "./");
 	if (!path.isEmpty())
 	{
-
-		data.clear();
 		ui->lePngDirectory->setText(path.replace("/", "\\"));
-		QDir dir(path);
-		QStringList filter(QString("*.png"));
-		QFileInfoList pngSources = dir.entryInfoList(filter);
-		for (auto& png : pngSources)
-			data.append(new PortraitData(png));
+		PresetLoader loader;
+		data = loader.loadFromDirectory(path);
 
-		ui->tbwPngItems->setPortraitsInfo(dir.entryList(filter));
+		ui->tbwPngItems->loadPortraitsInfo(data);
 	}
 }
 
 void PngPortrait2DDS::onTableLoadingCompleted()
 {
-	ui->statusBar->showMessage(tr("Loading Completed: %1 Total").arg(data.size()));
+	ui->statusBar->showMessage(tr("Loading Completed: %1 Total").arg(data->size()));
 
 	pgbar->hide();
 	pgbar->reset();
 	dataLoaded = true;
 	this->enableEditorWidget();
-	ui->wPreview->scalePng(data.defaultScale());
-	ui->dspbPotraitScale->setValue(data.defaultScale());
+	ui->wPreview->scalePng(data->defaultScale());
+	ui->dspbPotraitScale->setValue(data->defaultScale());
+	ui->spbPortraitOffsetX->setValue(data->defaultOffset().x());
+	ui->spbPortraitOffsetY->setValue(data->defaultOffset().y());
+
+	ui->cbExportDDS->setChecked(data.exportDDS());
+	ui->cbExportRegistration->setChecked(data.exportRegistration());
+	ui->cbExportProperNameEffect->setChecked(data.exportProperNameEffect());
 }
 
 void PngPortrait2DDS::onPortraitSelected(const QModelIndex& index)
@@ -140,10 +154,10 @@ void PngPortrait2DDS::onPortraitSelected(const QModelIndex& index)
 	{
 		currIndex = index.row();
 
-		ui->wPreview->setPreviewPng(data.portrait(currIndex).absoluteFilePath());
+		ui->wPreview->setPreviewPng(data->at(currIndex).absoluteFilePath());
 
-		QPoint& offset = data.offset(currIndex);
-		double scale = data.scale(currIndex);
+		const QPoint& offset = data->offset(currIndex);
+		double scale = data->scale(currIndex);
 
 		ui->spbPortraitOffsetX->setValue(offset.x());
 		ui->spbPortraitOffsetY->setValue(offset.y());
@@ -151,23 +165,22 @@ void PngPortrait2DDS::onPortraitSelected(const QModelIndex& index)
 		ui->dspbPotraitScale->setValue(scale);
 		ui->hsldPotraitScale->setValue(scale * ScaleSliderMaxValue);
 
-		ui->cbUseSeperateSetting->setChecked(data.at(currIndex)->useSeperateSetting);
-		
+		ui->cbUseSeperateSetting->setChecked(data->at(currIndex).independent_setting);
 	}
 }
 
 void PngPortrait2DDS::onUseSeperateSettingStateChanged(int state)
 {
-	data.at(currIndex)->useSeperateSetting = (state == Qt::Checked);
-	if (data.at(currIndex)->useSeperateSetting)
+	data->setUseIndependentSettings(currIndex, state == Qt::Checked);
+	if (data->useIndependentSettings(currIndex))
 	{
-		data.at(currIndex)->offset = ui->wPreview->getImageOffset();
-		data.at(currIndex)->scale = ui->wPreview->getScaleRatio();
+		data->setOffset(currIndex, ui->wPreview->getImageOffset());
+		data->setScale(currIndex, ui->wPreview->getScaleRatio());
 	}
 	else
 	{
-		QPoint offset(data.offset(currIndex));
-		double scale = data.scale(currIndex);
+		QPoint offset{ data->defaultOffset() };
+		double scale { data->defaultScale()  };
 		ui->spbPortraitOffsetX->setValue(offset.x());
 		ui->spbPortraitOffsetY->setValue(offset.y());
 		ui->dspbPotraitScale->setValue(scale);
@@ -211,7 +224,10 @@ void PngPortrait2DDS::onImageOffsetXChanged(int value)
 	{
 		int x = ui->spbPortraitOffsetX->value();
 		ui->wPreview->setImageOffsetX(x);
-		data.setOffsetX(currIndex , x);
+		if (data->useIndependentSettings(currIndex))
+			data->setOffsetX(currIndex, x);
+		else
+			data->setDefaultOffsetX(x);
 
 		ui->wPreview->repaint();
 	}
@@ -220,9 +236,12 @@ void PngPortrait2DDS::onImageOffsetYChanged(int value)
 {
 	if (!ui->wPreview->isCursorMovingImage())
 	{
-		int y =  ui->spbPortraitOffsetY->value();
+		int y = ui->spbPortraitOffsetY->value();
 		ui->wPreview->setImageOffsetY(y);
-		data.setOffsetY(currIndex, y);
+		if (data->useIndependentSettings(currIndex))
+			data->setOffsetY(currIndex, y);
+		else
+			data->setDefaultOffsetY(y);
 
 		ui->wPreview->repaint();
 	}
@@ -297,13 +316,13 @@ void PngPortrait2DDS::onExport()
 		return;
 	}
 
-	qsizetype portraitCnt = data.size();
+	qsizetype portraitCnt = data->size();
 	bool export_dds = ui->cbExportDDS->isChecked();
 	bool export_registration = ui->cbExportRegistration->isChecked();
 	bool export_effect = ui->cbExportProperNameEffect->isChecked();
 
 	// create file structure
-	QDir output(data.at(0)->portrait.absoluteDir());
+	QDir output(data.directory());
 	QString output_name = output.dirName() + QString("_output");
 	QString dds_path = output.dirName();
 	output.cdUp();
@@ -355,7 +374,7 @@ void PngPortrait2DDS::onExport()
 
 	for (qsizetype i = 0; i < portraitCnt && (export_registration || export_effect); i++)
 	{
-		QFileInfo& file = data.at(i)->portrait;
+		const QFileInfo& file = data->at(i).portrait;
 		QFileInfo targetDDS(dds_file.arg(file.baseName()));
 
 		lbLog->setText(tr("Preprocessing (%1/%2)...").arg(i).arg(portraitCnt));
@@ -424,14 +443,14 @@ void PngPortrait2DDS::onExport()
 		effect.close();
 	}
 
-
+	PresetData::SharedDataPointer portrait_list = data.portraitData();
 	if (export_dds)
 	{
 		output.mkdir(dds_path);
 
 		QFutureWatcher<void>* watcher = new QFutureWatcher<void>;
 		pgbar->show();
-		pgbar->setMaximum(data.size());
+		pgbar->setMaximum(portrait_list->size());
 
 		lbLog->setText(tr("Processing images..."));
 		connect(watcher, &QFutureWatcher<void>::progressValueChanged, pgbar, &QProgressBar::setValue);
@@ -443,16 +462,20 @@ void PngPortrait2DDS::onExport()
 			this->enableEditorWidget(true);
 		});
 
-		auto png2dds = [this, dds_file, imgSize](PortraitData* ii) {
-			QFileInfo& file = ii->portrait;
+		auto png2dds = [this, dds_file, imgSize](const PortraitsData::Portrait& i) {
+			const QFileInfo& file = i.portrait;
 			std::string ddspath = dds_file.arg(file.baseName()).toStdString();
 
 			// load portrait
 			QImage portrait(file.absoluteFilePath());
 
 			// read preset
-			QPoint offset = data.offset(ii);
-			double scale = data.scale(ii);
+			QPoint offset{
+				i.independent_setting ? i.offset : data->defaultOffset()
+			};
+			double scale {
+				i.independent_setting ? i.scale : data->defaultScale()
+			};
 
 			// draw & save
 			QImage img(imgSize, QImage::Format_RGBA8888);
@@ -477,7 +500,7 @@ void PngPortrait2DDS::onExport()
 			);
 		};
 
-		QFuture<void> future = QtConcurrent::map(data.begin(), data.end(), png2dds);
+		QFuture<void> future = QtConcurrent::map(data->begin(), data->end(), png2dds);
 		watcher->setFuture(future);
 	}
 	else
@@ -498,166 +521,27 @@ void PngPortrait2DDS::savePresetAsJson()
 	QString filename(QFileDialog::getSaveFileName(this, tr("Save Preset"), "./", tr("Json File(*.json)")));
 	if (!filename.isEmpty())
 	{
-		QJsonObject obj;
-
-		QJsonValue path(ui->lePngDirectory->text());
-
-		QJsonObject setting;
-		QJsonArray imgSize({ ui->spbImageWidth->value(), ui->spbImageHeight->value() });
-		QJsonArray defaultOffset({ data.defaultOffset().x(), data.defaultOffset().y() });
-		QJsonValue defaultScale(data.defaultScale());
-		setting.insert("Size", imgSize);
-		setting.insert("Offset", defaultOffset);
-		setting.insert("Scale", defaultScale);
-
-		QJsonObject exportOptions;
-		exportOptions.insert("DDS", QJsonValue(ui->cbExportDDS->isChecked()));
-		exportOptions.insert("Registration", QJsonValue(ui->cbExportRegistration->isChecked()));
-		exportOptions.insert("Proper Name Effect", QJsonValue(ui->cbExportProperNameEffect->isChecked()));
-
-		QJsonArray portraits;
-		qsizetype cnt = data.size();
-		for (qsizetype i = 0; i < cnt; i++)
+		PresetSaver saver;
+		if (!saver.savePreset(data, filename))
 		{
-			QJsonObject p;
-			p.insert("Use Types", QJsonArray({
-					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Species),
-					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Leader),
-					ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Ruler)
-				}));
-			bool useSeperateSetting = data.at(i)->useSeperateSetting;
-			p.insert("Use Seperate Setting", QJsonValue(useSeperateSetting));
-			if (useSeperateSetting)
-			{
-				p.insert("Offset", QJsonArray({
-					data.offset(i).x(),
-					data.offset(i).y()
-					}));
-				p.insert("Scale", QJsonValue(data.scale(i)));
-			}
-			portraits.append(p);
+			QMessageBox::critical(this, tr("Error"), tr("Failed to save preset as json."), tr("OK"));
 		}
-
-		obj.insert("Path", path);
-		obj.insert("Default Setting", setting);
-		obj.insert("Export Options", exportOptions);
-		obj.insert("Portraits", portraits);
-
-		QFile json(filename);
-		json.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-		json.write(QJsonDocument(obj).toJson());
-
-		json.close();
 	}
 }
 
 void PngPortrait2DDS::loadPresetFromJson(const QString& file)
 {
-	while (!file.isEmpty())
+	PresetLoader loader;
+	auto [preset, err] = loader.loadFromJson(file);
+
+	if (!loader.success())
 	{
-		currIndex = -1;
-
-		QFile json(file);
-		json.open(QIODevice::ReadOnly | QIODevice::Text);
-		QJsonDocument doc(QJsonDocument::fromJson(json.readAll()).object());
-		if (doc.isNull())
-			break;
-
-		QJsonObject obj(doc.object());
-		json.close();
-
-		QString path(obj.value("Path").toString());
-		QDir dir(path);
-		if (!dir.exists())
-			break;
-
-		QJsonObject defaultSetting(obj.value("Default Setting").toObject());
-		if (defaultSetting.isEmpty())
-			break;
-		QJsonValue scale(defaultSetting.value("Scale"));
-		QJsonArray offset(defaultSetting.value("Offset").toArray());
-		QJsonArray imgSize(defaultSetting.value("Size").toArray());
-
-		QJsonObject exportOptions(obj.value("Export Options").toObject());
-		if (exportOptions.isEmpty())
-			break;
-
-		if (!scale.isNull())
-		{
-			data.setDefaultScale(scale.toDouble());
-			ui->dspbPotraitScale->setValue(data.defaultScale());
-		}
-		if (!offset.isEmpty())
-		{
-			data.setDefaultOffset(offset.at(0).toInt(), offset.at(1).toInt());
-			ui->spbPortraitOffsetX->setValue(offset.at(0).toInt());
-			ui->spbPortraitOffsetY->setValue(offset.at(1).toInt());
-		}
-		if (!imgSize.isEmpty())
-		{
-			ui->spbImageWidth->setValue(imgSize.at(0).toInt());
-			ui->spbImageHeight->setValue(imgSize.at(1).toInt());
-		}
-		
-
-		ui->cbExportDDS->setChecked(exportOptions.value("DDS").toBool());
-		ui->cbExportRegistration->setChecked(exportOptions.value("Registration").toBool());
-		ui->cbExportProperNameEffect->setChecked(exportOptions.value("Proper Name Effect").toBool());
-
-
-		QJsonArray portraits(obj.value("Portraits").toArray());
-		data.clear();
-		ui->tbwPngItems->clearContents();
-		ui->lePngDirectory->setText(path);
-		QStringList filter(QString("*.png"));
-		QFileInfoList pngSources = dir.entryInfoList(filter);
-
-		if (portraits.isEmpty())
-		{
-			for (auto& png : pngSources)
-				data.append(new PortraitData(png));
-			ui->tbwPngItems->setPortraitsInfo(dir.entryList(filter));
-		}
-		else
-		{
-			int cnt = pngSources.size();
-			for (int i = 0; i < cnt; i++)
-			{
-				data.append(new PortraitData(pngSources[i]));
-				QJsonObject portrait(portraits.at(i).toObject());
-				if (!portrait.isEmpty())
-				{
-					data.at(i)->useSeperateSetting = portrait.value("Use Seperate Setting").toBool();
-					if (data.at(i)->useSeperateSetting)
-					{
-						QJsonArray offset(portrait.value("Offset").toArray());
-						data.at(i)->offset.setX(offset[0].toInt());
-						data.at(i)->offset.setY(offset[1].toInt());
-						data.at(i)->scale = portrait.value("Scale").toDouble();
-					}
-
-					QJsonArray usingTypes(portrait.value("Use Types").toArray());
-					ui->tbwPngItems->appendPortraitInfo(
-						pngSources[i].fileName(),
-						usingTypes[0].toBool(),
-						usingTypes[1].toBool(),
-						usingTypes[2].toBool()
-					);
-				}
-				else
-					ui->tbwPngItems->appendPortraitInfo(pngSources[i].fileName(), true, true, true);
-			}
-		}
-
-		emit ui->tbwPngItems->tableLoadingCompleted();
-
-		dataLoaded = true;
-		this->enableEditorWidget();
-
+		QMessageBox::critical(this, tr("Error"), tr("Invalid Json File.") + loader.errorString(), tr("OK"));
 		return;
 	}
+	data = preset;
 
-	QMessageBox::critical(this, tr("Error"), tr("Invalid Json File."), tr("OK"));
+	ui->tbwPngItems->loadPortraitsInfo(data);
 }
 
 
