@@ -1,54 +1,27 @@
 #include "GlobalConfigManager.h"
 #include <QDir>
 
+#include <QDebug>
+
 GlobalConfigManager* GlobalConfigManager::manager = nullptr;
 
-#define GROUP_Image(k) "Image/" k
-#define KEY_Width  "Width"
-#define KEY_Height "Height"
-
+#define GROUP_Image(k)    "Image/" k
 #define GROUP_Portrait(k) "Portrait/" k
-#define KEY_Scale         "Scale"
-#define KEY_OffsetX       "OffsetX"
-#define KEY_OffsetY       "OffsetY"
-#define KEY_UseForSpecies "UseForSpecies"
-#define KEY_UseForLeaders "UseForLeaders"
-#define KEY_UseForRulers  "UseForRulers"
+#define GROUP_Export(k)   "Export/" k
 
-#define GROUP_Export(k)  "Export/" k
-#define KEY_DDS              "DDS"
-#define KEY_Registration     "Registration"
-#define KEY_ProperNameEffect "ProperNameEffect"
 
-const char* default_ini_file_content =
-"[other]\n"
-"comment1 = \"this is config of Portrait2DDS program, which defines the default value of some properties\"\n"
-"commnet2 = \"value types:\"\n"
-"commnet3 = \"Width:   int\"\n"
-"commnet4 = \"Height:  int\"\n"
-"commnet5 = \"Scale:   double\"\n"
-"commnet6 = \"OffsetX: int\"\n"
-"commnet7 = \"OffsetY: int\"\n"
-"commnet8 = \"UseForSpecies: bool\"\n"
-"commnet9 = \"UseForLeaders: bool\"\n"
-"commnet10 = \"UseForRulers: bool\"\n"
-"commnet11 = \"DDS:              bool\"\n"
-"commnet12 = \"Registration:     bool\"\n"
-"commnet13 = \"ProperNameEffect: bool\"\n"
-"\n[Image]\n"
-"Width  = 280\n"
-"Height = 160\n"
-"\n[Portrait]"
-"Scale = 0.20\n"
-"OffsetX = 0\n"
-"OffsetY = 0\n"
-"UseForSpecies = 1\n"
-"UseForLeaders = 1\n"
-"UseForRulers  = 1\n"
-"\n[Export]\n"
-"DDS              = 1\n"
-"Registration     = 0\n"
-"ProperNameEffect = 0\n";
+const int    HardCodedDefault::H_KEY_Width   = 280;
+const int    HardCodedDefault::H_KEY_Height  = 160;
+const double HardCodedDefault::H_KEY_Scale   = 0.20;
+const int    HardCodedDefault::H_KEY_OffsetX = 0;
+const int    HardCodedDefault::H_KEY_OffsetY = 0;
+const bool   HardCodedDefault::H_KEY_UseForSpecies = true;
+const bool   HardCodedDefault::H_KEY_UseForLeaders = true;
+const bool   HardCodedDefault::H_KEY_UseForRulers  = true;
+const char * HardCodedDefault::H_KEY_Script = "default.py";
+const bool   HardCodedDefault::H_KEY_DDS              = true;
+const bool   HardCodedDefault::H_KEY_Registration     = false;
+const bool   HardCodedDefault::H_KEY_ExtraEffect = false;
 
 
 GlobalConfigManager::GlobalConfigManager()
@@ -92,6 +65,10 @@ void GlobalConfigManager::defaultValueCheck()
 		(ini.value(GROUP_Portrait(KEY_UseForRulers)).type() != QVariant::Bool))
 		ini.setValue(GROUP_Portrait(KEY_UseForRulers), true);
 
+	if (!ini.contains(GROUP_Export(KEY_Script)) ||
+		(ini.value(GROUP_Export(KEY_Script)).type() != QVariant::String))
+		ini.setValue(GROUP_Export(KEY_Script), "default.py");
+
 	if (!ini.contains(GROUP_Export(KEY_DDS)) ||
 		(ini.value(GROUP_Export(KEY_DDS)).type() != QVariant::Bool))
 		ini.setValue(GROUP_Export(KEY_DDS), true);
@@ -100,11 +77,9 @@ void GlobalConfigManager::defaultValueCheck()
 		(ini.value(GROUP_Export(KEY_Registration)).type() != QVariant::Bool))
 		ini.setValue(GROUP_Export(KEY_Registration), false);
 
-	if (!ini.contains(GROUP_Export(KEY_ProperNameEffect)) ||
-		(ini.value(GROUP_Export(KEY_ProperNameEffect)).type() != QVariant::Bool))
-		ini.setValue(GROUP_Export(KEY_ProperNameEffect), false);
-
-
+	if (!ini.contains(GROUP_Export(KEY_ExtraEffect)) ||
+		(ini.value(GROUP_Export(KEY_ExtraEffect)).type() != QVariant::Bool))
+		ini.setValue(GROUP_Export(KEY_ExtraEffect), false);
 }
 void GlobalConfigManager::commentCheck()
 {
@@ -118,52 +93,93 @@ void GlobalConfigManager::commentCheck()
 	ini.setValue("other/comment07", "UseForSpecies: bool");
 	ini.setValue("other/comment08", "UseForLeaders: bool");
 	ini.setValue("other/comment09", "UseForRulers:  bool");
-	ini.setValue("other/comment10", "DDS:              bool");
-	ini.setValue("other/comment11", "Registration:     bool");
-	ini.setValue("other/comment12", "ProperNameEffect: bool");
+	ini.setValue("other/comment10", "Script:     string");
+	ini.setValue("other/comment11", "DDS:          bool");
+	ini.setValue("other/comment12", "Registration: bool");
+	ini.setValue("other/comment13", "ExtraEffect:  bool");
 }
 
 QSize GlobalConfigManager::imageSize() const
 {
-	int w = ini.value(GROUP_Image(KEY_Width),  280).toInt();
-	int h = ini.value(GROUP_Image(KEY_Height), 160).toInt();
+	int w = ini.value(
+		GROUP_Image(KEY_Width),
+		GetHardCodedDefaultValue(KEY_Width)
+	).toInt();
+	int h = ini.value(
+		GROUP_Image(KEY_Height),
+		GetHardCodedDefaultValue(KEY_Height)
+	).toInt();
 	return QSize{ w, h };
 }
 
 double GlobalConfigManager::scale() const
 {
-	return ini.value(GROUP_Portrait(KEY_Scale), 0.20).toDouble();
+	return ini.value(
+		GROUP_Portrait(KEY_Scale),
+		GetHardCodedDefaultValue(KEY_Scale)
+	).toDouble();
 }
 QPoint GlobalConfigManager::offset() const
 {
-	int x = ini.value(GROUP_Portrait(KEY_OffsetX), 0).toInt();
-	int y = ini.value(GROUP_Portrait(KEY_OffsetY), 0).toInt();
+	int x = ini.value(
+		GROUP_Portrait(KEY_OffsetX),
+		GetHardCodedDefaultValue(KEY_OffsetX)
+	).toInt();
+	int y = ini.value(
+		GROUP_Portrait(KEY_OffsetY),
+		GetHardCodedDefaultValue(KEY_OffsetY)
+	).toInt();
 	return QPoint{ x, y };
 }
 bool GlobalConfigManager::useForSpecies() const
 {
-	return ini.value(GROUP_Portrait(KEY_UseForSpecies), true).toBool();
+	return ini.value(
+		GROUP_Portrait(KEY_UseForSpecies),
+		GetHardCodedDefaultValue(KEY_UseForSpecies)
+	).toBool();
 }
 bool GlobalConfigManager::useForLeaders() const
 {
-	return ini.value(GROUP_Portrait(KEY_UseForLeaders), true).toBool();
+	return ini.value(
+		GROUP_Portrait(KEY_UseForLeaders),
+		GetHardCodedDefaultValue(KEY_UseForLeaders)
+	).toBool();
 }
 bool GlobalConfigManager::useForRulers() const
 {
-	return ini.value(GROUP_Portrait(KEY_UseForRulers), true).toBool();
+	return ini.value(
+		GROUP_Portrait(KEY_UseForRulers),
+		GetHardCodedDefaultValue(KEY_UseForRulers)
+	).toBool();
 }
 
+QString GlobalConfigManager::script() const
+{
+	return ini.value(
+		GROUP_Export(KEY_Script),
+		GetHardCodedDefaultValue(KEY_Script)
+	).toString();
+}
 bool GlobalConfigManager::exportDDS() const
 {
-	return ini.value(GROUP_Export(KEY_DDS), true).toBool();
+	return ini.value(
+		GROUP_Export(KEY_DDS),
+		GetHardCodedDefaultValue(KEY_DDS)
+	).toBool();
 }
 bool GlobalConfigManager::exportRegistration() const
 {
-	return ini.value(GROUP_Export(KEY_Registration), true).toBool();
+	return ini.value(
+		GROUP_Export(KEY_Registration),
+		GetHardCodedDefaultValue(KEY_Registration)
+	).toBool();
 }
-bool GlobalConfigManager::exportProperNameEffect() const
+bool GlobalConfigManager::exportExtraEffect() const
 {
-	return ini.value(GROUP_Export(KEY_ProperNameEffect), true).toBool();
+	return ini.value(
+		GROUP_Export(KEY_ExtraEffect),
+		GetHardCodedDefaultValue(KEY_ExtraEffect)
+	).toBool();
 }
 
 
@@ -195,6 +211,10 @@ void GlobalConfigManager::setUseForRulers(bool value)
 	ini.setValue(GROUP_Portrait(KEY_UseForRulers), value);
 }
 
+void GlobalConfigManager::setScript(const QString& script)
+{
+	ini.setValue(GROUP_Export(KEY_Script), script);
+}
 void GlobalConfigManager::setExportDDS(bool value)
 {
 	ini.setValue(GROUP_Export(KEY_DDS), value);
@@ -203,7 +223,7 @@ void GlobalConfigManager::setExportRegistration(bool value)
 {
 	ini.setValue(GROUP_Export(KEY_Registration), value);
 }
-void GlobalConfigManager::setExportProperNameEffect(bool value)
+void GlobalConfigManager::setExportExtraEffect(bool value)
 {
-	ini.setValue(GROUP_Export(KEY_ProperNameEffect), value);
+	ini.setValue(GROUP_Export(KEY_ExtraEffect), value);
 }
