@@ -319,12 +319,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="cbExportProperNameEffect">
+          <widget class="QCheckBox" name="cbExportExtraEffect">
            <property name="whatsThis">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Determines if the program will generate an effect file and a yml file which will allow you to link portrait to its proper name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="text">
-            <string>Proper Name Effect</string>
+            <string>Extra Effect</string>
            </property>
           </widget>
          </item>
@@ -358,7 +358,13 @@
     <addaction name="actionLoadPreset"/>
     <addaction name="actionSavePreset"/>
    </widget>
+   <widget class="QMenu" name="menuScripts">
+    <property name="title">
+     <string>Scripts</string>
+    </property>
+   </widget>
    <addaction name="menuOptions"/>
+   <addaction name="menuScripts"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">
    <property name="sizeGripEnabled">

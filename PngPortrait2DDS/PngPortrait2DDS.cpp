@@ -24,6 +24,7 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	, ui(new Ui::PngPortrait2DDSClass()), lbLog(new QLabel(this)), dataLoaded(false)
 	, data{gConfig->imageSize(), gConfig->offset(), DefaultScale }
 	, currIndex(0), pgbar(new QProgressBar)
+	, python{ this }
 {
 	// init ui
 	ui->setupUi(this);
@@ -34,8 +35,9 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 	ui->dspbPotraitScale->setValue(data->defaultScale());
 	ui->cbExportDDS->setChecked(data.exportDDS());
 	ui->cbExportRegistration->setChecked(data.exportRegistration());
-	ui->cbExportProperNameEffect->setChecked(data.exportProperNameEffect());
+	ui->cbExportExtraEffect->setChecked(data.exportExtraEffect());
 
+	python.setUpScriptMenu(ui->menuScripts);
 
 	connect(ui->btnBrowseDirectory, &QPushButton::clicked, this, &PngPortrait2DDS::onBrowseDirectoryClicked);
 
@@ -87,7 +89,7 @@ PngPortrait2DDS::PngPortrait2DDS(QWidget *parent)
 
 	connect(ui->cbExportDDS, &QCheckBox::stateChanged, this, &PngPortrait2DDS::onExportOptionChanged);
 	connect(ui->cbExportRegistration, &QCheckBox::stateChanged, this, &PngPortrait2DDS::onExportOptionChanged);
-	connect(ui->cbExportProperNameEffect, &QCheckBox::stateChanged, this, &PngPortrait2DDS::onExportOptionChanged);
+	connect(ui->cbExportExtraEffect, &QCheckBox::stateChanged, this, &PngPortrait2DDS::onExportOptionChanged);
 
 	connect(ui->btnExport, &QPushButton::clicked, this, &PngPortrait2DDS::onExport);
 
@@ -124,14 +126,17 @@ void PngPortrait2DDS::onBrowseDirectoryClicked()
 		ui->lePngDirectory->setText(path.replace("/", "\\"));
 		PresetLoader loader;
 		data = loader.loadFromDirectory(path);
-
+		data.pyScript() = python.enabledScript();
+		data.exportDDS() = ui->cbExportDDS->isChecked();
+		data.exportRegistration() = ui->cbExportRegistration->isChecked();
+		data.exportExtraEffect() = ui->cbExportExtraEffect->isChecked();
 		ui->tbwPngItems->loadPortraitsInfo(data);
 	}
 }
 
 void PngPortrait2DDS::onTableLoadingCompleted()
 {
-	ui->statusBar->showMessage(tr("Loading Completed: %1 Total").arg(data->size()));
+	ui->statusBar->showMessage(tr("Loading Completed: %1 Total").arg(data->size()), 30000);
 
 	pgbar->hide();
 	pgbar->reset();
@@ -144,7 +149,7 @@ void PngPortrait2DDS::onTableLoadingCompleted()
 
 	ui->cbExportDDS->setChecked(data.exportDDS());
 	ui->cbExportRegistration->setChecked(data.exportRegistration());
-	ui->cbExportProperNameEffect->setChecked(data.exportProperNameEffect());
+	ui->cbExportExtraEffect->setChecked(data.exportExtraEffect());
 }
 
 void PngPortrait2DDS::onPortraitSelected(const QModelIndex& index)
@@ -266,7 +271,7 @@ void PngPortrait2DDS::disableEditorWidget(bool extra)
 		ui->wPreview->setDisabled(true);
 		ui->cbExportDDS->setDisabled(true);
 		ui->cbExportRegistration->setDisabled(true);
-		ui->cbExportProperNameEffect->setDisabled(true);
+		ui->cbExportExtraEffect->setDisabled(true);
 		ui->menuOptions->setDisabled(true);
 	}
 }
@@ -289,7 +294,7 @@ void PngPortrait2DDS::enableEditorWidget(bool all)
 		ui->wPreview->setEnabled(true);
 		ui->cbExportDDS->setEnabled(true);
 		ui->cbExportRegistration->setEnabled(true);
-		ui->cbExportProperNameEffect->setEnabled(true);
+		ui->cbExportExtraEffect->setEnabled(true);
 		ui->menuOptions->setEnabled(true);
 	}
 }
@@ -298,12 +303,13 @@ void PngPortrait2DDS::onExportOptionChanged(int state)
 {
 	bool anyOptionEnable = ui->cbExportDDS->isChecked() 
 						|| ui->cbExportRegistration->isChecked() 
-						|| ui->cbExportProperNameEffect->isChecked();
+						|| ui->cbExportExtraEffect->isChecked();
 	ui->btnExport->setEnabled(anyOptionEnable && dataLoaded);
 }
 
 void PngPortrait2DDS::onExport()
 {
+
 	QSize imgSize(ui->spbImageWidth->value(), ui->spbImageHeight->value());
 	if (imgSize.width() % 4 != 0 || imgSize.height() % 4 != 0)
 	{
@@ -319,47 +325,25 @@ void PngPortrait2DDS::onExport()
 	qsizetype portraitCnt = data->size();
 	bool export_dds = ui->cbExportDDS->isChecked();
 	bool export_registration = ui->cbExportRegistration->isChecked();
-	bool export_effect = ui->cbExportProperNameEffect->isChecked();
+	bool export_effect = ui->cbExportExtraEffect->isChecked();
 
 	// create file structure
 	QDir output(data.directory());
-	QString output_name = output.dirName() + QString("_output");
-	QString dds_path = output.dirName();
+	QString path_output = output.dirName() + QString("_output");
+	QString name = output.dirName();
 	output.cdUp();
-	output.mkdir(output_name);
-	output.cd(output_name);
+	output.mkdir(path_output);
+	output.cd(path_output);
 
 	// !! This string must be created after cd
-	QString dds_file = output.absoluteFilePath(dds_path + "/%1.dds");
+	QString dds_file = output.absoluteFilePath(name + "/%1.dds");
+	qDebug() << output.absolutePath();
 
 	QFile registration;
-	struct {
-		QString dds_path;
-		QString game_setup;
-		QString species;
-		QString& pop = species;
-		QString leader;
-		QString ruler;
-	} reg_info;
 	if (export_registration)
 	{
-		registration.setFileName(output.absoluteFilePath(dds_path + ".txt"));
+		registration.setFileName(output.absoluteFilePath(name + ".txt"));
 		registration.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-	}
-
-	QFile effect;
-	QFile yml;
-	QTextStream yml_stream(&yml);
-	if (export_effect)
-	{
-		effect.setFileName(output.absoluteFilePath(dds_path + "_name_effect.txt"));
-		effect.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-		effect.write("random_list = {\n");
-
-		yml.setFileName(output.absoluteFilePath(dds_path + "_name_effect.yml"));
-		yml.open(QIODevice::ReadWrite | QIODevice::Text | QIODeviceBase::Truncate);
-		yml_stream.setGenerateByteOrderMark(true);	// UTF8 With BOM
-		yml_stream << "l_simp_chinese:\n";
 	}
 
 	// In the end, file structure will be something like this:
@@ -367,86 +351,33 @@ void PngPortrait2DDS::onExport()
 	// path_output/						// where all generated files are
 	//  |-path/							// generated dds goes here    (if enabled)
 	//	|-registration.txt				// portrait registration file (if enabled)
-	//	|-effect.txt					// portrait's proper name effect (if enabled)
-	//	\-names.yml						// portrait's proper name effect (if enabled)
+	//	\-....							// other files (may be created during extra effect in python script)
+
 
 	this->disableEditorWidget(true);
-
-	for (qsizetype i = 0; i < portraitCnt && (export_registration || export_effect); i++)
+	
+	if (export_registration || export_effect)
 	{
-		const QFileInfo& file = data->at(i).portrait;
-		QFileInfo targetDDS(dds_file.arg(file.baseName()));
+		bool success = python.runScript(
+			data, name, export_registration, export_effect
+			, [&registration](const std::vector<std::string>& lines) {
+				for (auto& line : lines)
+					registration.write(QByteArray::fromStdString(line) + "\n");
+			}
+			, output.absolutePath());
 
-		lbLog->setText(tr("Preprocessing (%1/%2)...").arg(i).arg(portraitCnt));
-
-		if (export_registration)
+		if (!success)
 		{
-			QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 4, QChar('0')));
-
-			QString reg("\t%1 = { texturefile = \"gfx/models/portraits/%2/%3\" }\n");
-
-			reg_info.dds_path += reg.arg(portrait_id, dds_path).arg(targetDDS.fileName());
-
-			((reg_info.game_setup += "\t\t\t\t\t") += portrait_id) += "\n";
-
-			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Species))
-				((reg_info.species += "\t\t\t\t\t") += portrait_id) += "\n";
-			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Leader))
-				((reg_info.leader += "\t\t\t\t\t") += portrait_id) += "\n";
-			if (ui->tbwPngItems->isUsingPortraitType(i, PortraitUsingType::Ruler))
-				((reg_info.ruler += "\t\t\t\t\t") += portrait_id) += "\n";
-		}
-
-		if (export_effect)
-		{
-			QString portrait_id(QString("%1_%2").arg(dds_path).arg(QString::number(i + 1), 3, QChar('0')));
-
-			QString dds_name(targetDDS.completeBaseName());
-			yml_stream << " NAME_" << dds_name << ":0 \"" << dds_name << "\"\n";
-
-			QString effectline(QString("\t1 = { portrait = %1  set_name = NAME_%2  set_leader_flag = flag_%2 }\n"));
-			effect.write(effectline.arg(portrait_id).arg(dds_name).toUtf8());
+			QMessageBox::critical(this, tr("Error"), python.errorMessage(), tr("OK"));
+			this->enableEditorWidget(true);
+			return;
 		}
 	}
 
-	if (export_registration)
-	{
-
-		registration.write("portraits = {\n");
-		registration.write(reg_info.dds_path.toUtf8());
-		registration.write("}\n");
-		registration.write(QString(
-			"portrait_groups = {\n"
-			"\t%1 = {\n"
-			"\t\tdefault = %2\n"
-		).arg(dds_path).arg(dds_path + "_001").toUtf8());
-#define WritePortraitInfo(reg, key)											\
-	reg.write("\t\t"#key" = {\n\t\t\tadd = {\n\t\t\t\tportraits = {\n");	\
-	reg.write(reg_info.key.toUtf8());										\
-	reg.write("\t\t\t\t}\n\t\t\t}\n\t\t}\n")
-
-		WritePortraitInfo(registration, game_setup);
-		WritePortraitInfo(registration, species);
-		WritePortraitInfo(registration, pop);
-		WritePortraitInfo(registration, leader);
-		WritePortraitInfo(registration, ruler);
-
-		registration.write("\t}\n}");
-		registration.close();
-#undef WritePortraitInfo
-	}
-
-	if (export_effect)
-	{
-		yml.close();
-		effect.write("}");
-		effect.close();
-	}
-
-	PresetData::SharedDataPointer portrait_list = data.portraitData();
 	if (export_dds)
 	{
-		output.mkdir(dds_path);
+		PresetData::SharedDataPointer portrait_list = data.portraitData();
+		output.mkdir(name);
 
 		QFutureWatcher<void>* watcher = new QFutureWatcher<void>;
 		pgbar->show();
@@ -541,6 +472,8 @@ void PngPortrait2DDS::loadPresetFromJson(const QString& file)
 	}
 	data = preset;
 
+	python.setEnabledScript(data.pyScript());
+	ui->statusBar->showMessage(tr("Python script has been set to %1  ").arg(python.enabledScript()), 5000);
 	ui->tbwPngItems->loadPortraitsInfo(data);
 }
 

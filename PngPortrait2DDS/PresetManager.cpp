@@ -10,22 +10,23 @@
 
 #include <QDebug>
 
-#define JSON_K_Path               "Path"
-#define JSON_K_Offset             "Offset"
-#define JSON_K_Scale              "Scale"
-#define JSON_K_ImageSize          "ImageSize"
-#define JSON_K_DDS                "DDS"
-#define JSON_K_Registration       "Registration"
-#define JSON_K_ProperNameEffect   "ProperNameEffect"
-#define JSON_K_Name               "Name"
-#define JSON_K_Species            "Species"
-#define JSON_K_Leaders            "Leaders"
-#define JSON_K_Rulers             "Rulers"
-#define JSON_K_Types              "Types"
-#define JSON_K_Settings           "Settings"
-#define JSON_K_DefaultSettings    "DefaultSettings"
-#define JSON_K_ExportOptions      "ExportOptions"
-#define JSON_K_Portraits          "Portraits"
+#define JSON_K_Path            "Path"
+#define JSON_K_Script          "Script"
+#define JSON_K_Offset          "Offset"
+#define JSON_K_Scale           "Scale"
+#define JSON_K_ImageSize       "ImageSize"
+#define JSON_K_DDS             "DDS"
+#define JSON_K_Registration    "Registration"
+#define JSON_K_ExtraEffect     "ExtraEffect"
+#define JSON_K_Name            "Name"
+#define JSON_K_Species         "Species"
+#define JSON_K_Leaders         "Leaders"
+#define JSON_K_Rulers          "Rulers"
+#define JSON_K_Types           "Types"
+#define JSON_K_Settings        "Settings"
+#define JSON_K_DefaultSettings "DefaultSettings"
+#define JSON_K_ExportOptions   "ExportOptions"
+#define JSON_K_Portraits       "Portraits"
 
 bool PresetSaver::savePreset(const PresetData& preset, const QString& filepath)
 {
@@ -35,6 +36,7 @@ bool PresetSaver::savePreset(const PresetData& preset, const QString& filepath)
 
 	QJsonObject obj;						// main json object
 	obj.insert(JSON_K_Path, preset.path);	// directory path
+	obj.insert(JSON_K_Script, preset.script);	// script used to do registration and stuff
 
 	std::shared_ptr<PortraitsData> data = preset.portraits;
 
@@ -46,7 +48,7 @@ bool PresetSaver::savePreset(const PresetData& preset, const QString& filepath)
 	QJsonObject export_options;
 	export_options.insert(JSON_K_DDS,			  preset.export_options.dds);
 	export_options.insert(JSON_K_Registration,	  preset.export_options.registration);
-	export_options.insert(JSON_K_ProperNameEffect, preset.export_options.proper_name_effect);
+	export_options.insert(JSON_K_ExtraEffect, preset.export_options.proper_name_effect);
 
 	QJsonArray portraits;					// portraits data array
 	for (auto& portrait : data->data)
@@ -120,6 +122,11 @@ std::pair<PresetData, QJsonParseError> PresetLoader::loadFromJson(const QString&
 		return ret;
 	}
 
+	// python script, no need to check if it exists, we have a fallback in PythonEngine class
+	preset.script = obj.contains(JSON_K_Script) ?
+		obj.value(JSON_K_Script).toString() : gConfig->script();
+
+	// default offset and scale settings
 	if (obj.contains(JSON_K_DefaultSettings))
 	{
 		QJsonObject default_setting{ obj.value(JSON_K_DefaultSettings).toObject() };
@@ -147,6 +154,7 @@ std::pair<PresetData, QJsonParseError> PresetLoader::loadFromJson(const QString&
 	}
 	else
 	{
+		// use the values defined in config.ini
 		preset.portraits->setDefaultOffset(gConfig->offset());
 		preset.portraits->setDefaultScale(gConfig->scale());
 		preset.img_size = gConfig->imageSize();
@@ -164,14 +172,14 @@ std::pair<PresetData, QJsonParseError> PresetLoader::loadFromJson(const QString&
 			export_option.value(JSON_K_Registration).toBool() : gConfig->exportRegistration();
 
 		preset.export_options.proper_name_effect =
-			export_option.contains(JSON_K_ProperNameEffect) ?
-			export_option.value(JSON_K_ProperNameEffect).toBool() : gConfig->exportProperNameEffect();
+			export_option.contains(JSON_K_ExtraEffect) ?
+			export_option.value(JSON_K_ExtraEffect).toBool() : gConfig->exportExtraEffect();
 	}
 	else
 	{
 		preset.export_options.dds = gConfig->exportDDS();
 		preset.export_options.registration = gConfig->exportRegistration();
-		preset.export_options.proper_name_effect = gConfig->exportProperNameEffect();
+		preset.export_options.proper_name_effect = gConfig->exportExtraEffect();
 	}
 
 	if (obj.contains(JSON_K_Portraits))
@@ -228,7 +236,6 @@ std::pair<PresetData, QJsonParseError> PresetLoader::loadFromJson(const QString&
 	}
 	else
 	{
-		// TODO: if "Portrait" entry (should be array type) does not exist, load from directory
 		QFileInfoList png_files{ dir_path.entryInfoList(QStringList{ "*.png" }) };
 		for (auto& png : png_files)
 		{
@@ -253,6 +260,7 @@ PresetData PresetLoader::loadFromDirectory(const QString& path)
 
 	PresetData preset{
 		dir_path.absolutePath(),
+		gConfig->script(),
 		QSize{ 280,160 },
 		true, false, false
 	};
@@ -272,8 +280,8 @@ PresetData PresetLoader::loadFromDirectory(const QString& path)
 }
 
 PresetData::PresetData(const QSize& image_size, const QPoint& defualt_offset, double default_scale)
-	: path{}, img_size{ image_size }
-	, export_options{ gConfig->exportDDS(), gConfig->exportRegistration(), gConfig->exportProperNameEffect()}
+	: path{}, script{}, img_size{ image_size }
+	, export_options{ gConfig->exportDDS(), gConfig->exportRegistration(), gConfig->exportExtraEffect()}
 	, types{}, portraits{ std::make_shared<PortraitsData>(defualt_offset, default_scale) }
 {
 }

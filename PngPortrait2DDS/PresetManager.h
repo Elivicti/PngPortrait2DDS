@@ -59,18 +59,22 @@ public:
 	const QSize& imageSize() const { return img_size; }
 	QSize& imageSize() { return img_size; }
 
+	const QString& pyScript() const { return script; }
+	QString& pyScript() { return script; }
+
 	bool exportDDS()              const { return export_options.dds; }
 	bool exportRegistration()     const { return export_options.registration; }
-	bool exportProperNameEffect() const { return export_options.proper_name_effect; }
+	bool exportExtraEffect() const { return export_options.proper_name_effect; }
 
 	bool& exportDDS()              { return export_options.dds; }
 	bool& exportRegistration()     { return export_options.registration; }
-	bool& exportProperNameEffect() { return export_options.proper_name_effect; }
+	bool& exportExtraEffect() { return export_options.proper_name_effect; }
 
 	SharedDataPointer portraitData() const { return portraits; }
 
 private:
 	QString path;
+	QString script;
 	QSize img_size;
 	struct {
 		bool dds;
@@ -85,14 +89,14 @@ private:
 	std::shared_ptr<PortraitsData> portraits;
 
 	PresetData()
-		: path{}, img_size{}
+		: path{}, script{}, img_size{}
 		, export_options{ true, false, false }, types{}
 		, portraits{ std::make_shared<PortraitsData>() } {}
 
 	PresetData(
-		const QString& path, const QSize& img_size,
+		const QString& path, const QString& script, const QSize& img_size,
 		bool export_dds, bool export_registration, bool export_proper_name_effect
-	) : path{ path }, img_size{ img_size }
+	) : path{ path }, script{ script }, img_size{ img_size }
 	  , export_options{ export_dds, export_registration, export_proper_name_effect }
 	  , types{} , portraits{ std::make_shared<PortraitsData>() } {}
 
@@ -111,7 +115,9 @@ public:
 		QPoint offset;
 		double scale;
 
+		// with suffix
 		QString fileName() const { return portrait.fileName(); }
+		// no suffix
 		QString baseName() const { return portrait.baseName(); }
 		QString absoluteFilePath() const { return portrait.absoluteFilePath(); }
 

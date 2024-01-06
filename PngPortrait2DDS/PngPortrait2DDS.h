@@ -2,7 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_PngPortrait2DDS.h"
-#include "PresetManager.h"
+#include "PythonEngine.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class PngPortrait2DDSClass; };
@@ -59,4 +59,6 @@ private:
 	int currIndex;
 
 	QProgressBar* pgbar;
+
+	PythonEngine python;
 };
