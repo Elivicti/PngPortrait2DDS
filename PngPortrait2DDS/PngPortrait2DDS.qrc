@@ -2,4 +2,8 @@
     <qresource prefix="/Translation">
         <file>zh_cn.qm</file>
     </qresource>
+    <qresource prefix="/">
+        <file>scripts/default.py</file>
+        <file>scripts/PdxPortraits.py</file>
+    </qresource>
 </RCC>

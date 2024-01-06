@@ -1,11 +1,13 @@
 #include "PngPortrait2DDS.h"
+#include "GlobalConfigManager.h"
 #include <QtWidgets/QApplication>
 #include <QTranslator>
-#include "GlobalConfigManager.h"
-
+#include <QDir>
 
 int main(int argc, char *argv[])
 {
+	pybind11::scoped_interpreter guard{};
+
 	QApplication app(argc, argv);
 	QTranslator* translator = new QTranslator(&app);
 	if (QLocale().language() == QLocale::Chinese)
@@ -14,6 +16,10 @@ int main(int argc, char *argv[])
 		if (success)
 			app.installTranslator(translator);
 	}
+
+#ifndef _DEBUG	// do not set to application path if in debug mode
+	QDir::setCurrent(app.applicationDirPath());
+#endif
 
 	GlobalConfigManager::init();
 
