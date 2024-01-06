@@ -52,7 +52,13 @@
     <ClCompile Include="PortraitTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PortraitDataList.cpp">
+    <ClCompile Include="PresetManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PythonEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalConfigManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,9 +69,18 @@
     <QtMoc Include="PortraitTable.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="PythonEngine.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PortraitDataList.h">
+    <ClInclude Include="PresetManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalConfigManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PdxPortraits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -75,11 +90,14 @@
     </QtTranslation>
   </ItemGroup>
   <ItemGroup>
-    <None Include="nvdxt.exe">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="zh_cn.qm">
       <Filter>Translation Files</Filter>
+    </None>
+    <None Include="scripts\default.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="scripts\PdxPortraits.py">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

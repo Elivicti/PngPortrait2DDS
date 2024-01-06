@@ -55,9 +55,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <ExternalIncludePath>$(VcpkgRoot)\installed\x64-windows\include\python3.10;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>$(VcpkgRoot)\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <ExternalIncludePath>$(VcpkgRoot)\installed\x64-windows\include\python3.10;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>$(VcpkgRoot)\installed\x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -85,16 +99,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="PortraitDataList.cpp" />
+    <ClCompile Include="GlobalConfigManager.cpp" />
     <ClCompile Include="PortraitTable.cpp" />
+    <ClCompile Include="PresetManager.cpp" />
     <ClCompile Include="PreviewWidget.cpp" />
+    <ClCompile Include="PythonEngine.cpp" />
+    <None Include="scripts\default.py" />
+    <None Include="scripts\PdxPortraits.py" />
     <None Include="zh_cn.qm" />
     <QtRcc Include="PngPortrait2DDS.qrc" />
     <QtUic Include="PngPortrait2DDS.ui" />
     <QtMoc Include="PngPortrait2DDS.h" />
     <ClCompile Include="PngPortrait2DDS.cpp" />
     <ClCompile Include="main.cpp" />
-    <None Include="nvdxt.exe" />
     <None Include="PngPortrait2DDS.ico" />
     <ResourceCompile Include="PngPortrait2DDS.rc" />
   </ItemGroup>
@@ -105,7 +122,10 @@
     <QtMoc Include="PortraitTable.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PortraitDataList.h" />
+    <ClInclude Include="GlobalConfigManager.h" />
+    <ClInclude Include="PdxPortraits.h" />
+    <ClInclude Include="PresetManager.h" />
+    <QtMoc Include="PythonEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="zh_cn.ts" />
