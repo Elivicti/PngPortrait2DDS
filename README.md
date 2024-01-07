@@ -1,10 +1,16 @@
 # 群星PNG图像转静态DDS肖像工具
 
- 为群星（Stellaris）游戏制作的静态DDS肖像工具，它能够：
+为群星（Stellaris）游戏制作的静态DDS肖像工具，它能够：
 
 + 批量将`PNG`图像转换为群星游戏使用的`DDS`（`DXT5`）格式
 + 调整图像尺寸、偏移和缩放
 + 批量完成肖像的注册，并且还允许通过`Python`编写自定义的注册脚本（详见[注册脚本文档](./PngPortrait2DDS/scripts/Documentation.md)）
+
+
+
+
+**本分支用于保存`v2.0`版本的旧文件结构，以便查看一些文件的`History`。**
+
 
 
 
