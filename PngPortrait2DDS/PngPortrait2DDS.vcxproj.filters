@@ -29,10 +29,10 @@
     <QtUic Include="PngPortrait2DDS.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtMoc Include="PngPortrait2DDS.h">
+    <QtMoc Include="include\PngPortrait2DDS.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <ClCompile Include="PngPortrait2DDS.cpp">
+    <ClCompile Include="src\PngPortrait2DDS.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <None Include="PngPortrait2DDS.ico">
@@ -43,44 +43,44 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PreviewWidget.cpp">
+    <ClCompile Include="src\PreviewWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PortraitTable.cpp">
+    <ClCompile Include="src\PortraitTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PresetManager.cpp">
+    <ClCompile Include="src\PresetManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PythonEngine.cpp">
+    <ClCompile Include="src\PythonEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GlobalConfigManager.cpp">
+    <ClCompile Include="src\GlobalConfigManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="PreviewWidget.h">
+    <QtMoc Include="include\PreviewWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="PortraitTable.h">
+    <QtMoc Include="include\PortraitTable.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="PythonEngine.h">
+    <QtMoc Include="include\PythonEngine.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PresetManager.h">
+    <ClInclude Include="include\PresetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GlobalConfigManager.h">
+    <ClInclude Include="include\GlobalConfigManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PdxPortraits.h">
+    <ClInclude Include="include\PdxPortraits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

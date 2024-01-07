@@ -99,33 +99,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="GlobalConfigManager.cpp" />
-    <ClCompile Include="PortraitTable.cpp" />
-    <ClCompile Include="PresetManager.cpp" />
-    <ClCompile Include="PreviewWidget.cpp" />
-    <ClCompile Include="PythonEngine.cpp" />
+    <ClCompile Include="src\GlobalConfigManager.cpp" />
+    <ClCompile Include="src\PortraitTable.cpp" />
+    <ClCompile Include="src\PresetManager.cpp" />
+    <ClCompile Include="src\PreviewWidget.cpp" />
+    <ClCompile Include="src\PythonEngine.cpp" />
     <None Include="scripts\default.py" />
     <None Include="scripts\PdxPortraits.py" />
     <None Include="zh_cn.qm" />
     <QtRcc Include="PngPortrait2DDS.qrc" />
     <QtUic Include="PngPortrait2DDS.ui" />
-    <QtMoc Include="PngPortrait2DDS.h" />
-    <ClCompile Include="PngPortrait2DDS.cpp" />
-    <ClCompile Include="main.cpp" />
+    <QtMoc Include="include\PngPortrait2DDS.h" />
+    <ClCompile Include="src\PngPortrait2DDS.cpp" />
+    <ClCompile Include="src\main.cpp" />
     <None Include="PngPortrait2DDS.ico" />
     <ResourceCompile Include="PngPortrait2DDS.rc" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="PreviewWidget.h" />
+    <QtMoc Include="include\PreviewWidget.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="PortraitTable.h" />
+    <QtMoc Include="include\PortraitTable.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GlobalConfigManager.h" />
-    <ClInclude Include="PdxPortraits.h" />
-    <ClInclude Include="PresetManager.h" />
-    <QtMoc Include="PythonEngine.h" />
+    <ClInclude Include="include\GlobalConfigManager.h" />
+    <ClInclude Include="include\PdxPortraits.h" />
+    <ClInclude Include="include\PresetManager.h" />
+    <QtMoc Include="include\PythonEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <QtTranslation Include="zh_cn.ts" />

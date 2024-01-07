@@ -1,4 +1,4 @@
-#include "GlobalConfigManager.h"
+#include "../include/GlobalConfigManager.h"
 #include <QDir>
 
 #include <QDebug>
