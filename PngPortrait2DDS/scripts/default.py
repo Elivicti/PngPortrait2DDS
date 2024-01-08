@@ -21,21 +21,19 @@ def Preprocess(data: list[PortraitData], name: str, regi: bool, effect: bool) ->
 		i += 1
 
 def Registration() -> list[str]:
-	logger.debug("Registering <{}>".format(reg_name))
+	logger.info("Registering <{}>".format(reg_name))
 
 	ret: list[str] = [
-		"portraits = {",
-		"\t{} = {{".format(reg_name)
+		"portraits = {"
 	]
 	species_portraits: list[str] = []
 	leader_portraits: list[str] = []
 	ruler_portraits: list[str] = []
 	
+	# 静态类型只用指定图片路径
 	for portrait in portrait_list:
-		# portraits
-		# 静态类型只用指定图片路径
-		texture = PortraitTextureStatic("gfx/models/portraits/{}/{}".format(reg_name, portrait.data.file_name))
-		ret.append("\t\t{} = {{ {} }}".format(portrait.id, texture.to_strings()[0]))
+		texture = PortraitTextureStatic("\"gfx/models/portraits/{}/{}\"".format(reg_name, portrait.data.file_name))
+		ret.append("\t{} = {{ {} }}".format(portrait.id, texture.to_strings()[0]))
 		# portrait groups
 		if portrait.data.use_as_species:			# 开局、物种、人口
 			species_portraits.append(portrait.id)
@@ -48,14 +46,13 @@ def Registration() -> list[str]:
 	# for portrait in portrait_list:
 	#	# 非静态肖像应指定一个entity
 	# 	texture = PortraitTextureNonStatic("{}_leader_entity".format(reg_name))
-	# 	texture.append_character_texture("gfx/models/portraits/{}/{}".format(reg_name, portrait.data.file_name))
-	# 	ret.append("\t\t{} = {{".format(portrait.id))
+	# 	texture.append_character_texture("\"gfx/models/portraits/{}/{}\"".format(reg_name, portrait.data.file_name))
+	# 	ret.append("\t{} = {{".format(portrait.id))
 	# 	for line in texture.to_strings():
-	# 		ret.append("\t\t\t" + line)
-	# 	ret.append("\t\t}")
+	# 		ret.append("\t\t" + line)
+	# 	ret.append("\t}")
 
 	ret += [
-		"\t}",
 		"}",
 		"portrait_groups = {"
 	]
@@ -78,7 +75,7 @@ def Registration() -> list[str]:
 	return ret
 
 def ExtraEffect(output_path: str) -> None:
-	logger.debug("Registering extra effect for <{}>@{}".format(reg_name, output_path))
+	logger.info("Registering extra effect for <{}>@{}".format(reg_name, output_path))
 	feffect_path = "{}/{}_name_effect.txt".format(output_path, reg_name)
 	fyml_path    = "{}/{}_names.yml".format(output_path, reg_name)
 
