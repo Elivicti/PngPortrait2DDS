@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QtWidgets/QMainWindow>
-#include "ui_PngPortrait2DDS.h"
 #include "PythonEngine.h"
 
 QT_BEGIN_NAMESPACE
@@ -9,7 +8,7 @@ namespace Ui { class PngPortrait2DDSClass; };
 QT_END_NAMESPACE
 
 class QProgressBar;
-
+class QLabel;
 
 class PngPortrait2DDS : public QMainWindow
 {

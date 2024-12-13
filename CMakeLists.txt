@@ -19,8 +19,15 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Python COMPONENTS Interpreter Development)
+find_package(pybind11 REQUIRED)
+find_package(soil2 REQUIRED)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets Concurrent LinguistTools)
 qt_standard_project_setup()
 
-# 包含子项目。
+set(HEADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(RESOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resource)
+
+include_directories(${HEADERS_DIR})
 add_subdirectory("src")

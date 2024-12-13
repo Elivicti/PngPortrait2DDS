@@ -1,4 +1,4 @@
-#include "../include/PortraitTable.h"
+#include "PortraitTable.h"
 #include <QStandardItemModel>
 
 #include <QHeaderView>

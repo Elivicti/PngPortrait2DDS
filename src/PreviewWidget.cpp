@@ -1,4 +1,4 @@
-#include "../include/PreviewWidget.h"
+#include "PreviewWidget.h"
 
 #include <QPaintEvent>
 #include <QPainter>

@@ -1,6 +1,6 @@
-#include "../include/PythonEngine.h"
-#include "../include/PdxPortraits.h"
-#include "../include/GlobalConfigManager.h"
+#include "PythonEngine.h"
+#include "PdxPortraits.h"
+#include "GlobalConfigManager.h"
 #include <chrono>
 
 #include <QWidget>

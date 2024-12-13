@@ -1,5 +1,6 @@
-#include "../include/PngPortrait2DDS.h"
-#include "../include/GlobalConfigManager.h"
+#include "PngPortrait2DDS.h"
+#include "ui/ui_PngPortrait2DDS.h"
+#include "GlobalConfigManager.h"
 
 #include <QProgressBar>
 #include <QFileDialog>

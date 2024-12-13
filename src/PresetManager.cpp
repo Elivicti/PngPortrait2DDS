@@ -1,5 +1,5 @@
-#include "../include/PresetManager.h"
-#include "../include/GlobalConfigManager.h"
+#include "PresetManager.h"
+#include "GlobalConfigManager.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
