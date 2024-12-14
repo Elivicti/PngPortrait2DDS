@@ -30,3 +30,12 @@ target_link_libraries(
 		pybind11::embed
 		soil2
 )
+
+if (NOT ${ENABLE_CONSOLE})
+	set_target_properties(
+		PngPortrait2DDS
+		PROPERTIES
+			WIN32_EXECUTABLE ON
+			#MACOSX_BUNDLE ON
+	)
+endif()

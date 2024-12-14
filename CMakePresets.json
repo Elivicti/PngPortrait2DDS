@@ -28,7 +28,8 @@
 				"strategy": "external"
 			},
 			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Debug"
+				"CMAKE_BUILD_TYPE": "Debug",
+				"ENABLE_CONSOLE": true
 			}
 		},
 		{
@@ -36,7 +37,8 @@
 			"displayName": "x64 Release",
 			"inherits": "x64-debug",
 			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Release"
+				"CMAKE_BUILD_TYPE": "Release",
+				"ENABLE_CONSOLE": false
 			}
 		}
 	]

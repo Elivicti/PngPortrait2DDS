@@ -19,7 +19,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Python COMPONENTS Interpreter Development)
+find_package(Python3 COMPONENTS Interpreter Development)
 find_package(pybind11 REQUIRED)
 find_package(soil2 REQUIRED)
 
