@@ -6,7 +6,7 @@ file(GLOB HEADERS ${HEADERS_DIR}/*.h)
 file(GLOB UI  ${CMAKE_CURRENT_SOURCE_DIR}/ui/*.ui)
 file(GLOB RC  ${RESOURCE_DIR}/*.rc)
 file(GLOB QRC ${RESOURCE_DIR}/*.qrc)
-file(GLOB TS  ${RESOURCE_DIR}/*.ts)
+file(GLOB TS  *.ts)
 
 qt_add_executable(
 	PngPortrait2DDS
@@ -19,6 +19,7 @@ qt_add_executable(
 
 qt_add_translations(
 	PngPortrait2DDS
+	TS_FILES
 		${TS}
 )
 
