@@ -21,6 +21,8 @@ ErrorDialog::ErrorDialog(const QString& title, const QString& text, Icon icon, Q
 
 	this->setWindowTitle(title);
 	ui->teMessage->setPlainText(text);
+
+	connect(ui->btnOK, &QPushButton::clicked, this, &QDialog::accept);
 }
 
 ErrorDialog::~ErrorDialog()
