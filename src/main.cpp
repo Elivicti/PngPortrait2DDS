@@ -6,6 +6,58 @@
 
 #include "ErrorDialog.h"
 
+struct ScopedRedirect
+{
+	ScopedRedirect(const char* fname)
+		: og_stdout{ *stdout }
+		, launch_log{ std::freopen(fname, "w+", stderr) }
+		, log{ fname }
+	{}
+
+	~ScopedRedirect()
+	{
+		close_log();
+		remove();
+	}
+
+	void close_log()
+	{
+		std::fclose(launch_log);
+		if (!log.isOpen())
+			log.open(QIODevice::ReadOnly);
+		*stdout = og_stdout;
+	}
+
+	QString read_all()
+	{
+		if (!log.isOpen())
+		{
+			return log.errorString();
+		}
+		return log.readAll();
+	}
+
+	void remove()
+	{
+		if (log.remove())
+			return;
+		close_log();
+		log.remove();
+	}
+
+	QString read_and_close()
+	{
+		close_log();
+		QString content = read_all();
+		remove();
+		return content;
+	}
+
+	std::FILE og_stdout;
+	std::FILE* launch_log;
+	QFile log;
+};
+
 int main(int argc, char *argv[])
 {
 	QApplication app{ argc,argv };
@@ -21,8 +73,7 @@ int main(int argc, char *argv[])
 	// do not set to application path if in debug mode
 	QDir::setCurrent(app.applicationDirPath());
 
-	auto old_stdout = *stderr;
-	auto p = std::freopen("launch.log", "w+", stderr);
+	ScopedRedirect r{ "launch.log" };
 #endif
 
 	try
@@ -30,25 +81,15 @@ int main(int argc, char *argv[])
 		pybind11::scoped_interpreter guard{};
 		PngPortrait2DDS w;
 		w.show();
-
+#ifndef _DEBUG
+		r.remove();
+#endif
 		return app.exec();
 	}
 #ifndef _DEBUG
 	catch (const std::exception& e)
 	{
-		*stderr = old_stdout;
-		QFile temp{ "launch.log" };
-		if (!temp.open(QIODevice::ReadOnly))
-		{
-			qDebug() << "somehow failed: " << temp.errorString();
-		}
-
-		QString msg{ temp.readAll() };
-		
-		if (!temp.remove())
-		{
-			qDebug() << "somehow failed: " << temp.errorString();
-		}
+		QString msg{ r.read_and_close() };
 
 		ErrorDialog msg_box{ QObject::tr("Critical Error"), msg += e.what() };
 		msg_box.setHelperText(QObject::tr(
