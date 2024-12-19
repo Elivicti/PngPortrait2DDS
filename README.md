@@ -26,29 +26,19 @@
 
 ## 构建须知
 
-> IDE：VS2022
->
-> 标准：C++20
-
-推荐使用`vcpkg`来安装第三方库：
+项目使用`CMake`进行构建，在`Windows`上构建时，推荐使用`vcpkg`来安装第三方库：
 
 ```powershell
-vcpkg install SOIL2:x64-windows
+vcpkg install SOIL2:x64-windows pybind11:x64-windows
 ```
 
-```pow	
-vcpkg install pybind11:x64-windows
-```
+### 注意：
 
-注意：如果使用`vcpkg`来安装这些库，你也许需要在项目中指定`Python`的库目录和包含目录。
+如果你的电脑上已经安装了`Python`，设置了`PYTHONHOME`环境变量，并且`Python`版本与`vcpkg`安装的`Python`依赖库的版本不同，在构建时可能会出现与`Python`相关的错误。
 
-在默认情况下，`vcpkg`将会把`Python`的包含目录放入`$(VcpkgRoot)\installed\x64-windows\include\python<版本号>`中，在引用这些头文件时需要使用多指定一级目录，而`pybind11`是直接引用的`Python`库的头文件，因此在项目中添加`Python`的包含目录能够解决找不到`Python.h`的编译错误。
+**简易解决方法：**卸载原本的`Python`，或删除`PYTHONHOME`环境变量，这将会让`CMake`优先选择`vcpkg`提供的版本。
 
-
-
-
-
-
+程序的运行依赖于`Python`环境，缺失环境将会导致错误，如要分发，推荐使用与构建时所用依赖库相同版本的[Embeddable Package](https://www.python.org/downloads/windows/)。
 
 
 
