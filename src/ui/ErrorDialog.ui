@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ErrorDialog</string>
+   <string notr="true">ErrorDialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
@@ -21,7 +21,7 @@
        <item>
         <widget class="QLabel" name="lbIcon">
          <property name="text">
-          <string>TextLabel</string>
+          <string notr="true">TextLabel</string>
          </property>
         </widget>
        </item>
@@ -70,7 +70,7 @@
            <item row="0" column="0">
             <widget class="QLabel" name="lbHelperText">
              <property name="text">
-              <string>TextLabel</string>
+              <string notr="true">TextLabel</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
