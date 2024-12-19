@@ -40,14 +40,10 @@ struct HardCodedDefault
 class GlobalConfigManager
 {
 public:
-	static void init()
-	{
-		if (manager == nullptr)
-			manager = new GlobalConfigManager{};
+	static GlobalConfigManager* instance() {
+		static GlobalConfigManager manager;
+		return &manager;
 	}
-	static GlobalConfigManager* instance() { return manager; }
-	static void release() { delete manager; manager = nullptr; }
-
 	QSize imageSize() const;
 
 	double scale() const;
@@ -85,7 +81,6 @@ private:
 	void commentCheck();
 
 private:
-	static GlobalConfigManager* manager;
 	
 	QSettings ini;
 

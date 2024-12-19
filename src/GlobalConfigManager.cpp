@@ -3,8 +3,6 @@
 
 #include <QDebug>
 
-GlobalConfigManager* GlobalConfigManager::manager = nullptr;
-
 #define GROUP_Image(k)    "Image/" k
 #define GROUP_Portrait(k) "Portrait/" k
 #define GROUP_Export(k)   "Export/" k
