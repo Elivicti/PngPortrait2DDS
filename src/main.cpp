@@ -4,29 +4,68 @@
 #include <QTranslator>
 #include <QDir>
 
+#include "ErrorDialog.h"
+
 int main(int argc, char *argv[])
 {
-	pybind11::scoped_interpreter guard{};
-
-	QApplication app(argc, argv);
+	QApplication app{ argc,argv };
 	QTranslator* translator = new QTranslator(&app);
-	if (QLocale().language() == QLocale::Chinese)
+	if (QLocale{}.language() == QLocale::Chinese)
 	{
 		bool success = translator->load(":/Translation/zh_cn.qm");
 		if (success)
 			app.installTranslator(translator);
 	}
 
-#ifndef _DEBUG	// do not set to application path if in debug mode
+#ifndef _DEBUG
+	// do not set to application path if in debug mode
 	QDir::setCurrent(app.applicationDirPath());
+
+	auto old_stdout = *stderr;
+	auto p = std::freopen("launch.log", "w+", stderr);
 #endif
 
-	GlobalConfigManager::init();
+	try
+	{
+		pybind11::scoped_interpreter guard{};
+		PngPortrait2DDS w;
+		w.show();
 
-	PngPortrait2DDS w;
-	w.show();
-	int code = app.exec();
+		return app.exec();
+	}
+#ifndef _DEBUG
+	catch (const std::exception& e)
+	{
+		*stderr = old_stdout;
+		QFile temp{ "launch.log" };
+		if (!temp.open(QIODevice::ReadOnly))
+		{
+			qDebug() << "somehow failed: " << temp.errorString();
+		}
 
-	GlobalConfigManager::release();
-	return code;
+		QString msg{ temp.readAll() };
+		
+		if (!temp.remove())
+		{
+			qDebug() << "somehow failed: " << temp.errorString();
+		}
+
+		ErrorDialog msg_box{ app.tr("Critical Error"), msg += e.what() };
+		msg_box.setHelperText(app.tr(
+			"If \"Python\" is mentioned in the error message, "
+			"then this problem is most likely caused by a missing or corrupted Python install. "
+			"Try installing/reinstalling Python."
+		));
+
+		return msg_box.exec();
+	}
+#else
+	catch (const std::exception& e)
+	{
+		qDebug() << typeid(e).name();
+		qDebug() << e.what();
+	}
+#endif
+
+	return app.exec();
 }
