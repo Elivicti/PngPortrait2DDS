@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 			qDebug() << "somehow failed: " << temp.errorString();
 		}
 
-		ErrorDialog msg_box{ app.tr("Critical Error"), msg += e.what() };
-		msg_box.setHelperText(app.tr(
+		ErrorDialog msg_box{ QObject::tr("Critical Error"), msg += e.what() };
+		msg_box.setHelperText(QObject::tr(
 			"If \"Python\" is mentioned in the error message, "
 			"then this problem is most likely caused by a missing or corrupted Python install. "
 			"Try installing/reinstalling Python."
