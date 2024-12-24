@@ -9,7 +9,7 @@ file(GLOB QRC ${RESOURCE_DIR}/*.qrc)
 file(GLOB TS  *.ts)
 
 qt_add_executable(
-	PngPortrait2DDS
+	${EXECUTABLE_TARGET_NAME}
 		${SRC}
 		${HEADERS}
 		${UI}
@@ -18,13 +18,13 @@ qt_add_executable(
 )
 
 qt_add_translations(
-	PngPortrait2DDS
+	${EXECUTABLE_TARGET_NAME}
 	TS_FILES
 		${TS}
 )
 
 target_link_libraries(
-	PngPortrait2DDS
+	${EXECUTABLE_TARGET_NAME}
 	PRIVATE
 		Qt6::Widgets
 		Qt6::Concurrent
@@ -34,7 +34,7 @@ target_link_libraries(
 
 if (NOT ${ENABLE_CONSOLE})
 	set_target_properties(
-		PngPortrait2DDS
+		${EXECUTABLE_TARGET_NAME}
 		PROPERTIES
 			WIN32_EXECUTABLE ON
 			#MACOSX_BUNDLE ON
