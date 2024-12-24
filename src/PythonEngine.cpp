@@ -170,6 +170,9 @@ PythonEngine::PythonEngine(QWidget* parent)
 	if (!script_dir.exists(DIR_LOG))
 		script_dir.mkdir(DIR_LOG);
 
+	auto sys = py::module_::import("sys");
+	sys.attr("dont_write_bytecode") = true;
+
 	auto const now = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
 	logger = std::make_shared<PythonLogger>(std::format("./" DIR_SCRIPTS "/" DIR_LOG "/{:%F}.log", now));
 
