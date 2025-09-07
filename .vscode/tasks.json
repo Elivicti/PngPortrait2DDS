@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: Configure",
+			"command": "configure",
+			"preset": "${command:cmake.activeConfigurePresetName}",
+			"detail": "CMake configure active preset"
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: Build",
+			"command": "build",
+			"preset": "${command:cmake.activeBuildPresetName}",
+			"targets": [
+				"${command:cmake.buildTargetName}"
+			],
+			"detail": "CMake build active preset"
+		}
+	]
+}

@@ -1,0 +1,20 @@
+{
+	"cmake.copyCompileCommands": "${workspaceFolder}/build/compile_commands.json",
+	"cmake.debugConfig": {
+		"cwd": "${workspaceFolder}"
+	},
+	"cmake.options.statusBarVisibility": "hidden",
+	"cmake.options.advanced": {
+		"configurePreset": { "statusBarVisibility": "compact" },
+		"buildTarget":     { "statusBarVisibility": "compact" },
+		"launchTarget":    { "statusBarVisibility": "compact" },
+		"configure":       { "statusBarVisibility": "compact" },
+		"build":           { "statusBarVisibility": "inherit" },
+		"launch":          { "statusBarVisibility": "inherit" },
+		"debug":           { "statusBarVisibility": "inherit" }
+	},
+	"clangd.arguments": [
+		"--compile-commands-dir=${workspaceFolder}/build/",
+		"--header-insertion=never"
+	]
+}
