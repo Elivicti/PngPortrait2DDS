@@ -114,8 +114,8 @@ public:
 	optional_const_reference at(const QtFileSystem::Path& path, tag_no_except tag) const;
 	optional_reference at(const QtFileSystem::Path& path, tag_no_except tag);
 
-	const_reference add_directory(const QtFileSystem::Path& path);
-	const_iterator remove_directory(const QtFileSystem::Path& path);
+	const_reference addDirectory(const QtFileSystem::Path& path);
+	const_iterator removeDirectory(const QtFileSystem::Path& path);
 
 
 	void save(const QtFileSystem::Path& path) const;
