@@ -106,6 +106,8 @@ public:
 
 	size_type size() const noexcept { return data.size(); }
 
+	bool containsDirectory(const QtFileSystem::Path& path) const;
+
 	static constexpr struct tag_no_except{} no_except_tag{};
 
 	const_reference at(const QtFileSystem::Path& path) const;

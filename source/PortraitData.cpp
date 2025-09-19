@@ -338,6 +338,12 @@ PortraitManager::PortraitManager(const QtFileSystem::Path& preset)
 	}
 }
 
+bool PortraitManager::containsDirectory(const QtFileSystem::Path& path) const
+{
+	return std::ranges::find_if(data, [&path](const PortraitDirectory& dir) {
+		return QtFileSystem::absolute(path) == dir.path;
+	}) != data.end();
+}
 
 PortraitManager::const_reference PortraitManager::addDirectory(const QtFileSystem::Path& path)
 {
