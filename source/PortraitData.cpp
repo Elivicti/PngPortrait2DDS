@@ -350,6 +350,12 @@ PortraitManager::const_reference PortraitManager::addDirectory(const QtFileSyste
 	if (!QtFileSystem::is_directory(path))
 		throw std::invalid_argument{ "input path is not a directory" };
 
+	if (auto dir = this->at(path, no_except_tag))
+	{
+		dir->get().refresh();
+		return dir.value();
+	}
+
 	QList<Portrait> portraits;
 	for (auto entry : QtFileSystem::DirectoryEntryList{ path, { "*.png" } })
 	{
