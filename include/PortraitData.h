@@ -4,20 +4,7 @@
 #include <QPoint>
 
 #include "utils/QtFileSystem.h"
-
-
-template<typename Pred = std::less<int>>
-struct CaseInsensitiveComparer
-{
-	bool operator()(const QString& lhs, const QString& rhs) const
-	{
-		return Pred{}(lhs.compare(rhs, Qt::CaseInsensitive), 0);
-	}
-};
-template<typename T>
-	requires (!std::is_reference_v<T>)
-using optional_ref = std::optional<std::reference_wrapper<T>>;
-
+#include "utils/misc.h"
 
 struct PortraitConfig
 {
