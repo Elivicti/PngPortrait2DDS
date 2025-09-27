@@ -1,9 +1,9 @@
 #include "PortraitData.h"
 
 #if defined(_WIN32)
-using QStringFilenameEqual   = CaseInsensitiveComparer<std::equal_to<QString>>;
-using QStringFilenameLess    = CaseInsensitiveComparer<std::less<QString>>;
-using QStringFilenameGreater = CaseInsensitiveComparer<std::greater<QString>>;
+using QStringFilenameEqual   = CaseInsensitiveComparer<std::equal_to<int>>;
+using QStringFilenameLess    = CaseInsensitiveComparer<std::less<int>>;
+using QStringFilenameGreater = CaseInsensitiveComparer<std::greater<int>>;
 #else
 using QStringFilenameEqual   = std::equal_to<QString>;
 using QStringFilenameLess    = std::less<QString>;
