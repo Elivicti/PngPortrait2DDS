@@ -62,8 +62,8 @@ void PictureViewContainer::setPreviewWidgetZoomViaLayoutMargin(int margin_horizo
 	int min_h = 50;
 	int min_w = min_h * aspect_layout->aspectRatio();
 
-	margin_horizontal = std::clamp(margin_horizontal, 10, (this->width()  - min_w) / 2);
-	margin_vertical   = std::clamp(margin_vertical,   10, (this->height() - min_h) / 2);
+	margin_horizontal = std::clamp(margin_horizontal, 10, std::max((this->width()  - min_w) / 2, 10));
+	margin_vertical   = std::clamp(margin_vertical,   10, std::max((this->height() - min_h) / 2, 10));
 
 	aspect_layout->setContentsMargins(margin_horizontal, margin_vertical, margin_horizontal, margin_vertical);
 }
