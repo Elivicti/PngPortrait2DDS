@@ -25,6 +25,7 @@ protected:
 	void resizeEvent(QResizeEvent* evt) override;
 	void wheelEvent(QWheelEvent* evt) override;
 
+	void setPreviewWidgetZoomViaLayoutMargin(int margin_horizontal, int margin_vertical);
 private:
 	PictureView* pic;
 	KeepAspectRatioLayout* aspect_layout;
