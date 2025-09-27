@@ -8,6 +8,7 @@ PictureView::PictureView(QWidget* parent)
 	: QFrame{ parent }
 	, data{ QPixmap{}, QPoint{ 0, 0 }, 1.0, 1.0 }
 	, drag_button{ Qt::NoButton }, wheel_step{ 0.0 }, cursor_as_whl_scale_center{ false }, track_mouse_drag{ false }
+	, constraint{ 0.001, 0.0 }
 	, state{ false, false, QPoint{ 0, 0 }, QPoint{ 0, 0 }, false }
 {
 	connect(this, &PictureView::offsetChanged, this, &PictureView::force_repaint);
