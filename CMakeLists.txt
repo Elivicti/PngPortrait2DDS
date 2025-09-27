@@ -25,17 +25,17 @@ if (NOT GIT_URL)
 	set(GIT_URL "git@github.com:")
 endif()
 
+set(REQIRED_SimpleReflect_VERSION "1.2")
 
 include(FetchContent)
 
-find_package(SimpleReflect QUIET)
-
+find_package(SimpleReflect ${REQIRED_SimpleReflect_VERSION} QUIET)
 if(NOT SimpleReflect_FOUND)
-	message(STATUS "SimpleReflect not found, fetching v1.2 from github")
+	message(STATUS "SimpleReflect ${REQIRED_SimpleReflect_VERSION} not found, fetching from github")
 	FetchContent_Declare(
 		SimpleReflect
 		GIT_REPOSITORY ${GIT_URL}Elivicti/SimpleReflect.git
-		GIT_TAG        v1.2
+		GIT_TAG        v${REQIRED_SimpleReflect_VERSION}
 	)
 	FetchContent_MakeAvailable(SimpleReflect)
 endif()
