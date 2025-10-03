@@ -81,6 +81,13 @@ MainWindow::MainWindow(QWidget* parent)
 		ui->spbOffsetY->setValue(offset.y());
 
 	});
+	connect(ui->picView, &PictureView::scaleChanged, [this, power](double scale) {
+		SignalBlockerGuard dspb_guard{ ui->dspbScale };
+		SignalBlockerGuard hsld_guard{ ui->hsldScale };
+
+		ui->dspbScale->setValue(scale);
+		ui->hsldScale->setValue(scale * power);
+	});
 
 	connect(ui->spbOffsetX, &QSpinBox::valueChanged, [this](int offset_x) {
 		SignalBlockerGuard guard{ ui->picView };
@@ -92,6 +99,24 @@ MainWindow::MainWindow(QWidget* parent)
 		SignalBlockerGuard guard{ ui->picView };
 
 		ui->picView->setOffset(ui->picView->offset().x(), offset_y);
+		ui->picView->update();
+	});
+
+	connect(ui->dspbScale, &QDoubleSpinBox::valueChanged, [this, power](double scale) {
+		SignalBlockerGuard guard{ ui->hsldScale };
+
+		int val = power * scale;
+		ui->hsldScale->setValue(val);
+
+		ui->picView->setScale(scale);
+		ui->picView->update();
+	});
+	connect(ui->hsldScale, &QSlider::valueChanged, [this, power](int value) {
+		SignalBlockerGuard guard{ ui->dspbScale};
+
+		double scale = (double)value / (double)power;
+		ui->dspbScale->setValue(scale);
+		ui->picView->setScale(scale);
 		ui->picView->update();
 	});
 }
