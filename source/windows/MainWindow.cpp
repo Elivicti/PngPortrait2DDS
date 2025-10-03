@@ -6,6 +6,8 @@
 
 #include <QFileDialog>
 
+#include "Settings.h"
+
 MainWindow::MainWindow(QWidget* parent)
 	: QMainWindow{ parent }
 	, ui{ new Ui::MainWindow{} }
@@ -32,13 +34,29 @@ MainWindow::MainWindow(QWidget* parent)
 
 	ui->treePictures->clear();
 
-	ui->gbPreviewContainer->setPreviewWidget(ui->picView);
-	ui->gbPreviewContainer->setViewSize(QSize{ 496, 380 });
+	auto& setting_val = SettingsManager::instance().settings();
 
-	ui->picView->setScale(0.5);
-	ui->picView->setAcceptWheel(0.05);
+	ui->gbPreviewContainer->setPreviewWidget(ui->picView);
+	ui->gbPreviewContainer->setViewSize(setting_val.default_size);
+
+	ui->spbHeight->setRange(4, setting_val.control_max_height);
+	ui->spbWidth->setRange(4, setting_val.control_max_width);
+
+	ui->spbHeight->setValue(setting_val.default_size.height());
+	ui->spbWidth->setValue(setting_val.default_size.width());
+
+	ui->picView->setScale(setting_val.default_scale);
+	ui->picView->setAcceptWheel(setting_val.control_wheel_step);
 	ui->picView->setAcceptDrag();
 	ui->picView->setWheelScaleCenterAtCursorPos(true);
+
+	ui->dspbScale->setRange(0.001, setting_val.control_max_scale);
+	ui->dspbScale->setValue(ui->picView->scale());
+	ui->dspbScale->setSingleStep(setting_val.control_scale_spinbox_step);
+
+	const int power = std::pow(10, ui->dspbScale->decimals());
+	ui->hsldScale->setRange(1, setting_val.control_max_scale * power);
+	ui->hsldScale->setValue(ui->picView->scale() * power);
 
 	connect(ui->actionOpen, &QAction::triggered, [this]() {
 		QString name = QFileDialog::getExistingDirectory(this);
