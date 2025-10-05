@@ -345,7 +345,7 @@ bool PortraitManager::containsDirectory(const QtFileSystem::Path& path) const
 	}) != data.end();
 }
 
-PortraitManager::const_reference PortraitManager::addDirectory(const QtFileSystem::Path& path)
+PortraitManager::reference PortraitManager::addDirectory(const QtFileSystem::Path& path)
 {
 	if (!QtFileSystem::is_directory(path))
 		throw std::invalid_argument{ "input path is not a directory" };
@@ -367,7 +367,7 @@ PortraitManager::const_reference PortraitManager::addDirectory(const QtFileSyste
 	}
 	return data.emplaceBack(QtFileSystem::absolute(path), std::move(portraits));
 }
-PortraitManager::const_iterator PortraitManager::removeDirectory(const QtFileSystem::Path& path)
+PortraitManager::iterator PortraitManager::removeDirectory(const QtFileSystem::Path& path)
 {
 	auto it = std::ranges::find_if(data, [&path](const PortraitDirectory& d) {
 		return d.path == QtFileSystem::absolute(path);
