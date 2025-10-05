@@ -4,8 +4,7 @@
 #include <QTreeWidgetItem>
 
 #include "utils/QtFileSystem.h"
-
-class PortraitManager;
+#include "PortraitData.h"
 
 class PortraitDirectoryItem;
 class PortraitItem;
@@ -26,6 +25,8 @@ public:
 	void loadFromPreset(const QtFileSystem::Path& preset);
 	void addDirectory(const QtFileSystem::Path& dir);
 
+	PortraitItem* currentPortraitItem() { return current_portrait_item; }
+
 Q_SIGNALS:
 	void portraitSelected(PortraitItem* item);
 
@@ -35,6 +36,8 @@ private Q_SLOTS:
 
 private:
 	std::unique_ptr<PortraitManager> portraits;
+
+	PortraitItem* current_portrait_item;
 
 };
 
@@ -55,11 +58,14 @@ private:
 class PortraitItem : public QTreeWidgetItem
 {
 public:
-	PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path);
+	PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path, Portrait& p);
 
 	const QtFileSystem::Path& path() const { return portrait_path; }
 
+	Portrait& data() { return portrait; }
+
 private:
 	QtFileSystem::Path portrait_path;
+	Portrait& portrait;
 
 };

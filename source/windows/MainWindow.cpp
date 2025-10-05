@@ -70,6 +70,12 @@ MainWindow::MainWindow(QWidget* parent)
 	connect(ui->treePictures, &PortraitTreeWidget::portraitSelected, [this](PortraitItem* item) {
 		ui->picView->loadPicture(item->path());
 		ui->picView->update();
+
+		SignalBlockerGuard guards[] = {
+			ui->spbOffsetX, ui->spbOffsetY, ui->dspbScale, ui->hsldScale
+		};
+		ui->picView->setOffset(item->data().config.offset);
+		ui->picView->setScale(item->data().config.scale);
 	});
 
 
@@ -80,6 +86,7 @@ MainWindow::MainWindow(QWidget* parent)
 		ui->spbOffsetX->setValue(offset.x());
 		ui->spbOffsetY->setValue(offset.y());
 
+		ui->treePictures->currentPortraitItem()->data().config.offset = offset;
 	});
 	connect(ui->picView, &PictureView::scaleChanged, [this, power](double scale) {
 		SignalBlockerGuard dspb_guard{ ui->dspbScale };
@@ -87,6 +94,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 		ui->dspbScale->setValue(scale);
 		ui->hsldScale->setValue(scale * power);
+
+		ui->treePictures->currentPortraitItem()->data().config.scale = scale;
 	});
 
 	connect(ui->spbOffsetX, &QSpinBox::valueChanged, [this](int offset_x) {
@@ -94,12 +103,16 @@ MainWindow::MainWindow(QWidget* parent)
 
 		ui->picView->setOffset(offset_x, ui->picView->offset().y());
 		ui->picView->update();
+
+		ui->treePictures->currentPortraitItem()->data().config.offset.setX(offset_x);
 	});
 	connect(ui->spbOffsetY, &QSpinBox::valueChanged, [this](int offset_y) {
 		SignalBlockerGuard guard{ ui->picView };
 
 		ui->picView->setOffset(ui->picView->offset().x(), offset_y);
 		ui->picView->update();
+
+		ui->treePictures->currentPortraitItem()->data().config.offset.setX(offset_y);
 	});
 
 	connect(ui->dspbScale, &QDoubleSpinBox::valueChanged, [this, power](double scale) {
@@ -110,6 +123,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 		ui->picView->setScale(scale);
 		ui->picView->update();
+
+		ui->treePictures->currentPortraitItem()->data().config.scale = scale;
 	});
 	connect(ui->hsldScale, &QSlider::valueChanged, [this, power](int value) {
 		SignalBlockerGuard guard{ ui->dspbScale};
@@ -118,6 +133,8 @@ MainWindow::MainWindow(QWidget* parent)
 		ui->dspbScale->setValue(scale);
 		ui->picView->setScale(scale);
 		ui->picView->update();
+
+		ui->treePictures->currentPortraitItem()->data().config.scale = scale;
 	});
 }
 

@@ -1,11 +1,11 @@
 #include "widgets/PortraitTreeWidget.h"
 
-#include "PortraitData.h"
 #include "utils/misc.h"
 
 PortraitTreeWidget::PortraitTreeWidget(QWidget* parent)
 	: QTreeWidget{ parent }
 	, portraits{ new PortraitManager{} }
+	, current_portrait_item{ nullptr }
 {
 	connect(this, &QTreeWidget::itemSelectionChanged, this, &PortraitTreeWidget::on_item_selection_changed);
 	connect(this, &QTreeWidget::itemChanged,          this, &PortraitTreeWidget::on_item_changed);
@@ -90,6 +90,7 @@ void PortraitTreeWidget::on_item_selection_changed()
 	if (auto portrait = cast_item<PortraitItem>(item))
 	{
 		qDebug() << "Portrait:" << portrait->path();
+		current_portrait_item = portrait;
 		Q_EMIT portraitSelected(portrait);
 		return;
 	}
@@ -103,7 +104,7 @@ void PortraitTreeWidget::addDirectory(const QtFileSystem::Path& dir)
 	if (portraits->containsDirectory(dir))
 		return;
 
-	const PortraitDirectory& portrait_dir = portraits->addDirectory(dir);
+	PortraitDirectory& portrait_dir = portraits->addDirectory(dir);
 	SignalBlockerGuard guard{ this };
 
 	auto dir_item = new PortraitDirectoryItem{ this, portrait_dir.path };
@@ -116,7 +117,7 @@ void PortraitTreeWidget::addDirectory(const QtFileSystem::Path& dir)
 
 	for (auto& p : portrait_dir)
 	{
-		auto item = new PortraitItem{ dir_item, portrait_dir.path / p.filename };
+		auto item = new PortraitItem{ dir_item, portrait_dir.path / p.filename, p };
 		item->setText(0, p.filename);
 		item->setCheckState(0, Qt::Checked);
 
@@ -136,9 +137,10 @@ PortraitDirectoryItem::PortraitDirectoryItem(PortraitTreeWidget* parent, const Q
 }
 
 
-PortraitItem::PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path)
+PortraitItem::PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path, Portrait& p)
 	: QTreeWidgetItem{ parent }
 	, portrait_path{ path }
+	, portrait{ p }
 {
 	this->setData(0, Qt::UserRole, (int)PortraitTreeWidget::ItemRole::PortraitItem);
 }
