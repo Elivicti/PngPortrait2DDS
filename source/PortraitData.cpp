@@ -1,4 +1,5 @@
 #include "PortraitData.h"
+#include "Settings.h"
 
 #if defined(_WIN32)
 using QStringFilenameEqual   = CaseInsensitiveComparer<std::equal_to<int>>;
@@ -356,12 +357,17 @@ PortraitManager::reference PortraitManager::addDirectory(const QtFileSystem::Pat
 		return dir.value();
 	}
 
+	auto& settings = SettingsManager::instance().settings();
+
 	QList<Portrait> portraits;
 	for (auto entry : QtFileSystem::DirectoryEntryList{ path, { "*.png" } })
 	{
 		portraits.emplaceBack(Portrait{
 			.filename = entry.path().filename(),
-			.config = {},
+			.config = {
+				.offset = settings.default_offset,
+				.scale  = settings.default_scale,
+			},
 			.enabled = true,
 		});
 	}
