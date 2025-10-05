@@ -1,23 +1,16 @@
 #pragma once
 
-#include <QString>
+#include <QObject>
 #include <type_traits>
 
-template<typename T>
-	requires requires (std::remove_cvref_t<T>* o) { o->blockSignals(true); }
 struct SignalBlockerGuard
 {
-	using type = std::remove_cvref_t<T>;
-	type* obj;
+	QObject* obj;
 
-	SignalBlockerGuard(type* o)
+	SignalBlockerGuard(QObject* o)
 		: obj{ o } { obj->blockSignals(true); }
 	~SignalBlockerGuard() { obj->blockSignals(false); }
 };
-
-template<typename T>
-SignalBlockerGuard(T* o) -> SignalBlockerGuard<T>;
-
 
 template<typename Pred = std::less<int>>
 struct CaseInsensitiveComparer
