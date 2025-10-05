@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ranges>
+
 #include <QString>
 #include <QPoint>
 
@@ -130,3 +132,105 @@ public:
 	optional_reference operator[](const QtFileSystem::Path& dir)
 	{ return at(dir, no_except_tag); }
 };
+
+class FlatPortraitView
+{
+public:
+	struct PortraitItemView
+	{
+		PortraitManager::iterator dir;
+		PortraitDirectory::iterator p;
+
+		Portrait& operator->() { return *p; }
+
+		QtFileSystem::Path path() const
+		{
+			return dir->path / p->filename;
+		}
+	};
+	struct iterator
+	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = PortraitItemView;
+
+		PortraitItemView operator*() { return { dir, p }; }
+
+		iterator& operator++()
+		{
+			++p;
+			if (p == dir->end())
+			{
+				++dir;
+				p = dir == view->dir_end ? PortraitDirectory::iterator{} : dir->begin();
+			}
+			return *this;
+		}
+		iterator& operator--()
+		{
+			if (p == dir->begin())
+			{
+				--dir;
+				p = dir->end();
+			}
+			--p;
+			return *this;
+		}
+
+		bool operator==(const iterator& other) const
+		{
+			return dir == other.dir && p == other.p;
+		}
+		bool operator<(const iterator& other) const
+		{
+			if (dir <  other.dir) return true;
+			if (dir == other.dir) return p < other.p;
+			return false;
+		}
+		bool operator>(const iterator& other) const
+		{
+			if (dir >  other.dir) return true;
+			if (dir == other.dir) return p > other.p;
+			return false;
+		}
+		bool operator<=(const iterator& other) const
+		{ return this->operator==(other) || this->operator<(other); }
+		bool operator>=(const iterator& other) const
+		{ return this->operator==(other) || this->operator>(other); }
+
+		std::ptrdiff_t operator-(const iterator& rhs) const;
+		iterator& operator-=(std::ptrdiff_t distance);
+		iterator& operator+=(std::ptrdiff_t distance);
+
+		PortraitManager::iterator dir;
+		PortraitDirectory::iterator p;
+
+		FlatPortraitView* view;
+	};
+	using value_type = PortraitItemView;
+public:
+	FlatPortraitView(PortraitManager& m)
+		: m{ m }, dir_end{ m.end() } {}
+
+	iterator begin()
+	{
+		auto dir_begin = m.begin();
+		if (dir_begin == dir_end) return end();
+		return { dir_begin, m.begin()->begin(), this };
+	}
+	iterator end() { return { m.end(), PortraitDirectory::iterator{}, this }; }
+
+	std::size_t size() const
+	{
+		auto ths = const_cast<FlatPortraitView*>(this);
+		return ths->end() - ths->begin();
+	}
+private:
+	friend class iterator;
+
+	PortraitManager& m;
+	PortraitManager::iterator dir_end;
+};
+
+
+template<>
+struct std::iterator_traits<FlatPortraitView::iterator> : std::iterator_traits<PortraitManager::iterator>{};

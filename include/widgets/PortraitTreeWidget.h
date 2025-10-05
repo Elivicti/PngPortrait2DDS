@@ -25,6 +25,8 @@ public:
 	void loadFromPreset(const QtFileSystem::Path& preset);
 	void addDirectory(const QtFileSystem::Path& dir);
 
+	FlatPortraitView portraitsView() { return { *portraits }; }
+
 	PortraitItem* currentPortraitItem() { return current_portrait_item; }
 
 Q_SIGNALS:

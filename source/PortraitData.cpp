@@ -443,3 +443,74 @@ void PortraitManager::save(const QtFileSystem::Path& path) const
 	f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
 	f.write(QJsonDocument{ arr }.toJson());
 }
+
+// ----------------------------------------------------------
+
+std::ptrdiff_t FlatPortraitView::iterator::operator-(const iterator& rhs) const
+{
+	if (dir == rhs.dir) return p - rhs.p;
+
+	std::ptrdiff_t distance = 0;
+
+	auto [min, max] = std::pair<iterator, iterator>{ std::minmax(*this, rhs) };
+	distance -= min.p - min.dir->begin();
+	if (max.dir != max.view->dir_end)
+		distance += max.p - max.dir->begin();
+
+	while (min.dir != max.dir)
+	{
+		distance += min.dir->end() - min.dir->begin();
+		++min.dir;
+	}
+
+	std::ptrdiff_t sign = dir < rhs.dir ? -1 : 1;
+	return distance * sign;
+}
+
+FlatPortraitView::iterator& FlatPortraitView::iterator::operator-=(std::ptrdiff_t distance)
+{
+	return *this += -distance;
+}
+
+FlatPortraitView::iterator& FlatPortraitView::iterator::operator+=(std::ptrdiff_t distance)
+{
+	while (distance != 0)
+	{
+		auto dir_size = dir->size();
+		auto idx = p - dir->begin();
+		if (distance > 0)
+		{
+			auto remain = dir_size - idx;
+			if (distance < remain)
+			{
+				p += distance;
+				break;
+			}
+			distance -= remain;
+			++dir;
+			if (dir == view->dir_end)
+			{
+				p = PortraitDirectory::iterator{};
+				break;
+			}
+			p = dir->begin();
+		}
+		else
+		{
+			if (-distance <= idx)
+			{
+				p += distance;
+				break;
+			}
+			distance += idx;
+			if (dir == view->m.begin())
+			{
+				p = dir->begin();
+				break;
+			}
+			--dir;
+			p = dir->end();
+		}
+	}
+	return *this;
+}
