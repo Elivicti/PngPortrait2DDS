@@ -309,7 +309,11 @@ PortraitManager::PortraitManager(const QtFileSystem::Path& preset)
 
 
 	QFile file{ preset };
-	file.open(QIODevice::ReadOnly | QIODevice::Text);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		throw std::runtime_error{ file.errorString().toStdString() };
+		return;
+	}
 
 	QJsonDocument json_doc{ QJsonDocument::fromJson(file.readAll()) };
 
@@ -440,7 +444,11 @@ void PortraitManager::save(const QtFileSystem::Path& path) const
 	}
 
 	QFile f{ path };
-	f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate);
+	if (!f.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
+	{
+		throw std::runtime_error{ f.errorString().toStdString() };
+		return;
+	}
 	f.write(QJsonDocument{ arr }.toJson());
 }
 
