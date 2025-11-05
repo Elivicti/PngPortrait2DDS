@@ -511,7 +511,7 @@ FlatPortraitView::iterator& FlatPortraitView::iterator::operator+=(std::ptrdiff_
 				break;
 			}
 			distance += idx;
-			if (dir == view->m.begin())
+			if (dir == view->m->begin())
 			{
 				p = dir->begin();
 				break;

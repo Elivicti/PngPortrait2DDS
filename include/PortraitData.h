@@ -1,7 +1,5 @@
 #pragma once
 
-#include <ranges>
-
 #include <QString>
 #include <QPoint>
 
@@ -141,7 +139,8 @@ public:
 		PortraitManager::iterator dir;
 		PortraitDirectory::iterator p;
 
-		Portrait& operator->() { return *p; }
+		Portrait* operator->() { return &*p; }
+		Portrait& operator*()  { return *p; }
 
 		QtFileSystem::Path path() const
 		{
@@ -207,17 +206,30 @@ public:
 		FlatPortraitView* view;
 	};
 	using value_type = PortraitItemView;
+	using const_iterator = iterator;
 public:
 	FlatPortraitView(PortraitManager& m)
-		: m{ m }, dir_end{ m.end() } {}
+		: m{ &m }, dir_end{ m.end() } {}
+	FlatPortraitView(const FlatPortraitView&) = default;
+
+	// technically a default constructor is not needed, but QtConcurrent functions requires this
+	FlatPortraitView() : m{ nullptr } {}
 
 	iterator begin()
 	{
-		auto dir_begin = m.begin();
+		auto dir_begin = m->begin();
 		if (dir_begin == dir_end) return end();
-		return { dir_begin, m.begin()->begin(), this };
+		return { dir_begin, m->begin()->begin(), this };
 	}
-	iterator end() { return { m.end(), PortraitDirectory::iterator{}, this }; }
+	iterator end() { return { m->end(), PortraitDirectory::iterator{}, this }; }
+
+	const_iterator cbegin()
+	{
+		auto dir_begin = m->begin();
+		if (dir_begin == dir_end) return end();
+		return { dir_begin, m->begin()->begin(), this };
+	}
+	const_iterator cend() { return { m->end(), PortraitDirectory::iterator{}, this }; }
 
 	std::size_t size() const
 	{
@@ -227,7 +239,7 @@ public:
 private:
 	friend class iterator;
 
-	PortraitManager& m;
+	PortraitManager* m;
 	PortraitManager::iterator dir_end;
 };
 
