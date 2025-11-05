@@ -20,8 +20,8 @@ static T* cast_item(QTreeWidgetItem* item);
 template<>
 PortraitDirectoryItem* cast_item(QTreeWidgetItem* item)
 {
-	auto role_type = (PortraitTreeWidget::ItemRole)item->data(0, Qt::UserRole).toInt();
-	if (role_type == PortraitTreeWidget::ItemRole::DirectoryItem)
+	auto type = (PortraitTreeWidget::ItemType)item->type();
+	if (type == PortraitTreeWidget::ItemType::DirectoryItem)
 		return static_cast<PortraitDirectoryItem*>(item);
 
 	return nullptr;
@@ -29,8 +29,8 @@ PortraitDirectoryItem* cast_item(QTreeWidgetItem* item)
 template<>
 PortraitItem* cast_item(QTreeWidgetItem* item)
 {
-	auto role_type = (PortraitTreeWidget::ItemRole)item->data(0, Qt::UserRole).toInt();
-	if (role_type == PortraitTreeWidget::ItemRole::PortraitItem)
+	auto type = (PortraitTreeWidget::ItemType)item->type();
+	if (type == PortraitTreeWidget::ItemType::PortraitItem)
 		return static_cast<PortraitItem*>(item);
 
 	return nullptr;
@@ -107,40 +107,87 @@ void PortraitTreeWidget::addDirectory(const QtFileSystem::Path& dir)
 	PortraitDirectory& portrait_dir = portraits->addDirectory(dir);
 	SignalBlockerGuard guard{ this };
 
-	auto dir_item = new PortraitDirectoryItem{ this, portrait_dir.path };
-	dir_item->setText(0, portrait_dir.path.generic_qstring());
+	add_directory(portrait_dir);
+}
 
+void PortraitTreeWidget::add_directory(PortraitManager::reference dir)
+{
+	refresh_directory(new PortraitDirectoryItem{ this, dir });
+}
 
-	this->addTopLevelItem(dir_item);
-	dir_item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
-	dir_item->setCheckState(0, Qt::Checked);
+void PortraitTreeWidget::refresh_directory(PortraitDirectoryItem* dir)
+{
+	int last_selected_item_idx = -1; // idx is only meaningful if >= 0
 
-	for (auto& p : portrait_dir)
+	// need to re-select item after refreshed, save index here
+	if (current_portrait_item)
 	{
-		auto item = new PortraitItem{ dir_item, portrait_dir.path / p.filename, p };
+		last_selected_item_idx = dir->indexOfChild(current_portrait_item);
+		if (last_selected_item_idx < 0)
+			current_portrait_item = nullptr;
+	}
+	qDeleteAll(dir->takeChildren()); // clear directory item first
+
+	dir->setText(0, dir->path().generic_qstring());
+
+	this->addTopLevelItem(dir);
+	dir->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
+	dir->setCheckState(0, Qt::Checked);
+
+	for (auto& p : dir->data())
+	{
+		auto item = new PortraitItem{ dir, dir->path() / p.filename, p };
 		item->setText(0, p.filename);
 		item->setCheckState(0, Qt::Checked);
 
-		dir_item->addChild(item);
+		// do a count-down to check if this item is previously selected
+		// if idx is initially < 0, this condition will never be true
+		if ((last_selected_item_idx--) == 0)
+			current_portrait_item = item;
+
+		dir->addChild(item);
 	}
-	dir_item->setExpanded(true);
+	dir->setExpanded(true);
+}
 
+void PortraitTreeWidget::contextMenuEvent(QContextMenuEvent* evt)
+{
+	auto item = this->itemAt(evt->pos());
+	if (!item)
+	{
+		evt->ignore();
+		return;
+	}
+
+	// TODO: fully implement context menu
+
+	if (auto portrait_dir = cast_item<PortraitDirectoryItem>(item))
+	{
+		ctx_menu.state.dir_item = portrait_dir;
+
+		ctx_menu.directory_item_menu->exec(evt->globalPos());
+		return;
+	}
+	if (auto portrait = cast_item<PortraitItem>(item))
+	{
+		ctx_menu.state.portrait_item = portrait;
+
+		ctx_menu.portrait_item_menu->exec(evt->globalPos());
+		return;
+	}
+
+	evt->ignore(); // Should be impossible
 }
 
 
-
-PortraitDirectoryItem::PortraitDirectoryItem(PortraitTreeWidget* parent, const QtFileSystem::Path& path)
-	: QTreeWidgetItem{ parent }
-	, directory_path{ path }
+PortraitDirectoryItem::PortraitDirectoryItem(PortraitTreeWidget* parent, PortraitDirectory& directory)
+	: QTreeWidgetItem{ parent, Type }
+	, directory{ directory }
 {
-	this->setData(0, Qt::UserRole, (int)PortraitTreeWidget::ItemRole::DirectoryItem);
 }
 
-
-PortraitItem::PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path, Portrait& p)
-	: QTreeWidgetItem{ parent }
-	, portrait_path{ path }
-	, portrait{ p }
+PortraitItem::PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& full_path, Portrait& p)
+	: QTreeWidgetItem{ parent, Type }
+	, full_path{ full_path }, portrait{ p }
 {
-	this->setData(0, Qt::UserRole, (int)PortraitTreeWidget::ItemRole::PortraitItem);
 }

@@ -68,7 +68,7 @@ MainWindow::MainWindow(QWidget* parent)
 	});
 
 	connect(ui->treePictures, &PortraitTreeWidget::portraitSelected, [this](PortraitItem* item) {
-		ui->picView->loadPicture(item->path());
+		ui->picView->loadPicture(item->fullPath());
 		ui->picView->update();
 
 		SignalBlockerGuard guards[] = {

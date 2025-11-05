@@ -13,10 +13,10 @@ class PortraitTreeWidget : public QTreeWidget
 {
 	Q_OBJECT
 public:
-	enum class ItemRole : std::uint16_t
+	enum class ItemType : std::uint16_t
 	{
-		DirectoryItem = 2,
-		PortraitItem  = 3
+		DirectoryItem = QTreeWidgetItem::UserType + 2,
+		PortraitItem  = QTreeWidgetItem::UserType + 3
 	};
 public:
 	PortraitTreeWidget(QWidget* parent = nullptr);
@@ -36,6 +36,11 @@ private Q_SLOTS:
 	void on_item_selection_changed();
 	void on_item_changed(QTreeWidgetItem* item, int column);
 
+
+private:
+	void add_directory(PortraitManager::reference dir);
+	void refresh_directory(PortraitDirectoryItem* dir);
+
 private:
 	std::unique_ptr<PortraitManager> portraits;
 
@@ -43,31 +48,34 @@ private:
 
 };
 
+// Item to represent directory
 class PortraitDirectoryItem : public QTreeWidgetItem
 {
 public:
-	PortraitDirectoryItem(PortraitTreeWidget* parent, const QtFileSystem::Path& path);
+	enum { Type = (int)PortraitTreeWidget::ItemType::DirectoryItem };
+	PortraitDirectoryItem(PortraitTreeWidget* parent, PortraitDirectory& directory);
 
+	const QtFileSystem::Path& path() const { return directory.path; }
 
-	const QtFileSystem::Path& path() const { return directory_path; }
+	PortraitDirectory& data() { return directory; }
 
 private:
-	QtFileSystem::Path directory_path;
-
+	PortraitDirectory& directory;
 };
 
 
+// Item to represent portrait
 class PortraitItem : public QTreeWidgetItem
 {
 public:
-	PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& path, Portrait& p);
+	enum { Type = (int)PortraitTreeWidget::ItemType::PortraitItem };
+	PortraitItem(PortraitDirectoryItem* parent, const QtFileSystem::Path& full_path, Portrait& p);
 
-	const QtFileSystem::Path& path() const { return portrait_path; }
+	const QtFileSystem::Path& fullPath() const { return full_path; }
 
 	Portrait& data() { return portrait; }
 
 private:
-	QtFileSystem::Path portrait_path;
+	QtFileSystem::Path full_path;
 	Portrait& portrait;
-
 };
